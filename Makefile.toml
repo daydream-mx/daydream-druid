@@ -1,0 +1,27 @@
+[tasks.format]
+install_crate = { crate_name = "rustfmt", rustup_component_name = "rustfmt", binary = "rustfmt", test_arg = "--help" }
+command = "cargo"
+args = ["fmt"]
+
+[tasks.ruma-docs]
+command = "cargo"
+args = ["doc", "-p", "ruma", "--open"]
+
+[tasks.sdk-docs]
+command = "cargo"
+args = ["doc", "-p", "matrix-sdk", "--open"]
+
+[tasks.druid-docs]
+command = "cargo"
+args = ["doc", "-p", "druid", "--open"]
+
+[tasks.build-web]
+command = "wasm-pack"
+args = ["build", "--target", "web", "--dev"]
+
+[tasks.web-server]
+install_crate = { crate_name = "https", binary = "http", test_arg = "--help" }
+command = "http"
+
+[tasks.run-web]
+dependencies = ["format", "build-web", "web-server"]

@@ -1,0 +1,40 @@
+[package]
+name = "daydream-druid"
+version = "0.1.0"
+authors = ["MTRNord <mtrnord1@gmail.com>"]
+edition = "2018"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[[bin]]
+name = "daydream-desktop"
+path = "src/bin/desktop.rs"
+
+[dependencies]
+druid = { git = "https://github.com/linebender/druid.git", features = ["image", "svg"] }
+matrix-sdk = { version = "0.1.0", git = "https://github.com/matrix-org/matrix-rust-sdk", default-features = false, features = ["messages", "rustls-tls"]} # features = ["encryption"]}
+url = "2.1.1"
+thiserror = "1.0"
+futures-locks = { git = "https://github.com/asomers/futures-locks", default-features = false }
+
+# Markdown
+pulldown-cmark = "0.7.2"
+
+[target.'cfg(target_arch = "wasm32")'.dependencies]
+wasm-bindgen = "0.2.67"
+console_error_panic_hook = "0.1.6"
+
+[profile.release]
+# less code to include into binary
+panic = 'abort'
+# optimization over all codebase ( better optimization, slower build )
+codegen-units = 1
+# optimization for size ( more aggresive )
+opt-level = 'z'
+# optimization for size
+# opt-level = 's'
+# link time optimization using using whole-program analysis
+lto = true
