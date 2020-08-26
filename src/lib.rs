@@ -42,13 +42,5 @@ pub fn rmain() -> Result<(), PlatformError> {
 }
 
 fn ui_builder() -> impl Widget<MainState> {
-    // The label text will be computed dynamically based on the current locale and count
-    let text =
-        LocalizedString::new("hello-counter").with_arg("count", |data: &MainState, _env| (*data).count.into());
-    let label = Label::new(text).padding(5.0).center();
-    let button = Button::new("increment")
-        .on_click(|_ctx, data: &mut MainState, _env| (*data).count += 1)
-        .padding(5.0);
-
-    Flex::column().with_child(label).with_child(button)
+    Flex::column()
 }
