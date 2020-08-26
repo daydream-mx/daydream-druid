@@ -76,13 +76,12 @@ fn ui_builder() -> impl Widget<MainState> {
                     let homeserver_url = Url::parse(&homeserver).unwrap();
                     let client = Client::new_with_config(homeserver_url, client_config).unwrap();
 
-                    CLIENT.get_or_init(|| {
-                        client.clone()
-                    });
+                    CLIENT.get_or_init(|| client.clone());
                     tokio::spawn(async move {
-                        client.login(&mxid, &password, None, Some("Daydream druid")).await;
+                        client
+                            .login(&mxid, &password, None, Some("Daydream druid"))
+                            .await;
                         println!("Login done!");
-    
                     });
                     // Clear password from memory
                     // This could potentially be unsafe as we dont know if the login is done. But it should also not break things
