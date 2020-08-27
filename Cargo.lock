@@ -373,6 +373,8 @@ dependencies = [
  "matrix-sdk-common-macros",
  "once_cell",
  "pulldown-cmark",
+ "serde",
+ "serde_json",
  "thiserror",
  "tokio",
  "url",

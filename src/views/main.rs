@@ -1,6 +1,6 @@
 use crate::AppState;
 use druid::{
-    widget::{Flex, Label, List, Scroll},
+    widget::{Flex, Label, List, Scroll, TextBox},
     Color, UnitPoint, Widget, WidgetExt,
 };
 pub fn main_ui() -> impl Widget<AppState> {
@@ -33,14 +33,20 @@ pub fn main_ui() -> impl Widget<AppState> {
             .border(Color::WHITE, 1.0),
         1.0,
     );
-    flex.add_flex_child(
-        Scroll::new(event_list)
-            .vertical()
-            .expand_height()
-            .lens(AppState::events_list)
-            .background(Color::rgb8(41, 41, 41))
-            .border(Color::WHITE, 1.0),
-        3.0,
+
+    let mut event_side = Flex::column();
+    let event_list_full = Scroll::new(event_list)
+        .vertical()
+        //.expand_height()
+        .lens(AppState::events_list)
+        .background(Color::rgb8(41, 41, 41))
+        .border(Color::WHITE, 1.0);
+    event_side.add_child(event_list_full);
+    event_side.add_flex_spacer(1.0);
+    event_side.add_child(
+        TextBox::new().lens(AppState::new_message).expand_width(),
     );
+    event_side.add_spacer(4.0);
+    flex.add_flex_child(event_side, 3.0);
     flex
 }

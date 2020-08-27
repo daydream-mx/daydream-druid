@@ -3,7 +3,6 @@ use druid::{
     widget::{Flex, Label},
     AppDelegate, Color, Command, Data, DelegateCtx, Env, Target, Widget, WidgetExt,
 };
-use std::sync::Arc;
 
 pub struct Delegate;
 
@@ -21,9 +20,6 @@ impl AppDelegate<AppState> for Delegate {
 
             // Clear password from memory
             data.password = "".into();
-
-            data.rooms_list = Arc::new(vec![1, 2, 3, 4, 5, 6]);
-            data.events_list = Arc::new(vec![1, 2, 3, 4, 5, 6]);
 
             // Change View
             data.current_view = *view;

@@ -41,7 +41,13 @@ enum View {
 // Do not derive as we want more control
 impl Default for View {
     fn default() -> Self {
-        View::LoginView
+        match matrix::login::Session::load() {
+            Some(_session) => {
+                // TODO relogin
+                View::MainView
+            }
+            None => View::LoginView,
+        }
     }
 }
 
@@ -57,6 +63,8 @@ pub struct AppState {
     // TODO proper types
     rooms_list: Arc<Vec<u32>>,
     events_list: Arc<Vec<u32>>,
+
+    new_message: String,
 }
 
 pub fn rmain() -> Result<(), PlatformError> {
@@ -65,18 +73,11 @@ pub fn rmain() -> Result<(), PlatformError> {
         .title(WINDOW_TITLE);
 
     // create the initial app state
-    let initial_state = AppState::default();
+    let mut initial_state = AppState::default();
+
+    initial_state.rooms_list = Arc::new(vec![1, 2, 3, 4, 5, 6]);
+    initial_state.events_list = Arc::new(vec![1, 2, 3, 4, 5, 6]);
     let delegate = utils::Delegate {};
-    /*if cfg!(debug_assertions) {
-        AppLauncher::with_window(main_window)
-            .delegate(delegate)
-            .use_simple_logger()
-            .launch(initial_state)
-    } else {
-        AppLauncher::with_window(main_window)
-            .delegate(delegate)
-            .launch(initial_state)
-    }*/
 
     AppLauncher::with_window(main_window)
         .delegate(delegate)
@@ -89,7 +90,6 @@ fn ui_builder() -> impl Widget<AppState> {
         |selector, _data, _env| match selector {
             View::LoginView => Box::new(login_ui()),
             View::MainView => Box::new(main_ui()),
-            _ => panic!("wrong state"),
         },
     )
 }
