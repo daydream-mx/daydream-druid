@@ -4,6 +4,8 @@ use druid::{
 };
 use matrix_sdk::Client;
 use once_cell::sync::OnceCell;
+use std::sync::Arc;
+use tokio::sync::Mutex;
 use views::login::login_ui;
 use views::main::main_ui;
 
@@ -28,8 +30,7 @@ const WINDOW_TITLE: LocalizedString<AppState> = LocalizedString::new("Daydream")
 
 const SET_VIEW: Selector<View> = Selector::new("event-daydream.set-view");
 
-// Replace with https://docs.rs/once_cell/1.4.1/once_cell/#lazy-initialized-global-data
-static CLIENT: OnceCell<Client> = OnceCell::new();
+static CLIENT: OnceCell<Mutex<Client>> = OnceCell::new();
 
 #[derive(Clone, Copy, Data, PartialEq, Debug)]
 enum View {
@@ -52,6 +53,10 @@ pub struct AppState {
     access_token: Option<String>,
     login_running: bool,
     current_view: View,
+
+    // TODO proper types
+    rooms_list: Arc<Vec<u32>>,
+    events_list: Arc<Vec<u32>>,
 }
 
 pub fn rmain() -> Result<(), PlatformError> {
@@ -62,7 +67,7 @@ pub fn rmain() -> Result<(), PlatformError> {
     // create the initial app state
     let initial_state = AppState::default();
     let delegate = utils::Delegate {};
-    if cfg!(debug_assertions) {
+    /*if cfg!(debug_assertions) {
         AppLauncher::with_window(main_window)
             .delegate(delegate)
             .use_simple_logger()
@@ -71,7 +76,11 @@ pub fn rmain() -> Result<(), PlatformError> {
         AppLauncher::with_window(main_window)
             .delegate(delegate)
             .launch(initial_state)
-    }
+    }*/
+
+    AppLauncher::with_window(main_window)
+        .delegate(delegate)
+        .launch(initial_state)
 }
 
 fn ui_builder() -> impl Widget<AppState> {

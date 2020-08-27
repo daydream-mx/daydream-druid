@@ -363,12 +363,14 @@ dependencies = [
 name = "daydream-druid"
 version = "0.1.0"
 dependencies = [
+ "async-trait",
  "cfg-if",
  "console_error_panic_hook",
  "dirs",
  "druid",
  "futures-locks",
  "matrix-sdk",
+ "matrix-sdk-common-macros",
  "once_cell",
  "pulldown-cmark",
  "thiserror",
