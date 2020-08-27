@@ -1,11 +1,15 @@
 use druid::{
-    widget::{Align, Button, Flex, Label, Scroll, TextBox, ViewSwitcher},
-    AppDelegate, AppLauncher, Color, Command, Data, DelegateCtx, Env, ExtEventSink, Lens,
-    LocalizedString, PlatformError, Selector, Size, Target, Widget, WidgetExt, WindowDesc,
+    widget::ViewSwitcher, AppLauncher, Data, Lens, LocalizedString, PlatformError, Selector, Size,
+    Widget, WindowDesc,
 };
-use matrix_sdk::{Client, ClientConfig};
+use matrix_sdk::Client;
 use once_cell::sync::OnceCell;
-use url::Url;
+use views::login::login_ui;
+use views::main::main_ui;
+
+mod matrix;
+mod utils;
+mod views;
 
 // This wrapper function is the primary modification we're making to the vanilla desktop
 #[cfg(all(target_arch = "wasm32", target_os = "unknown"))]
@@ -41,7 +45,7 @@ impl Default for View {
 }
 
 #[derive(Clone, Data, Lens, Default)]
-struct AppState {
+pub struct AppState {
     homeserver: String,
     mxid: String,
     password: String,
@@ -57,7 +61,7 @@ pub fn rmain() -> Result<(), PlatformError> {
 
     // create the initial app state
     let initial_state = AppState::default();
-    let delegate = Delegate {};
+    let delegate = utils::Delegate {};
     if cfg!(debug_assertions) {
         AppLauncher::with_window(main_window)
             .delegate(delegate)
@@ -79,111 +83,4 @@ fn ui_builder() -> impl Widget<AppState> {
             _ => panic!("wrong state"),
         },
     )
-}
-
-fn label_widget<T: Data>(widget: impl Widget<T> + 'static, label: &str) -> impl Widget<T> {
-    Flex::row()
-        .must_fill_main_axis(true)
-        .with_child(Label::new(label).align_left().fix_height(40.0))
-        .with_spacer(8.0)
-        .with_child(widget.align_left().fix_width(400.0))
-        .border(Color::WHITE, 1.0)
-}
-
-fn login(sink: ExtEventSink, mxid: String, password: String) {
-    // TODO add non tokio variant for wasm
-    cfg_if::cfg_if! {
-        if #[cfg(any(target_arch = "wasm32"))] {
-            wasm_bindgen_futures::spawn_local(async move {
-                CLIENT.get()
-                    .login(&mxid, &password, None, Some("Daydream druid"))
-                    .await;
-                println!("Login done!");
-                sink.submit_command(SET_VIEW, View::MainView, None).expect("command failed to submit");
-            });
-        } else {
-            tokio::spawn(async move {
-                CLIENT.get().unwrap()
-                    .login(&mxid, &password, None, Some("Daydream druid"))
-                    .await;
-                println!("Login done!");
-                sink.submit_command(SET_VIEW, View::MainView, None).expect("command failed to submit");
-            });
-        }
-    }
-}
-
-fn login_ui() -> impl Widget<AppState> {
-    Scroll::new(Align::centered(
-        Flex::column()
-            .with_child(label_widget(
-                TextBox::new().lens(AppState::homeserver),
-                "Homeserver",
-            ))
-            .with_child(label_widget(
-                TextBox::new().lens(AppState::mxid),
-                "Username",
-            ))
-            .with_child(label_widget(
-                TextBox::new().lens(AppState::password),
-                "Password",
-            ))
-            .with_child(
-                Button::new("Login").on_click(|ctx, data: &mut AppState, _env| {
-                    println!("Login button clicked!");
-                    let homeserver = (*data).homeserver.clone();
-                    let mxid = (*data).mxid.clone();
-                    let password = (*data).password.clone();
-                    cfg_if::cfg_if! {
-                        if #[cfg(any(target_arch = "wasm32"))] {
-                            let client_config = ClientConfig::new();
-                        } else {
-                            let mut data_dir = dirs::data_dir().unwrap();
-                            data_dir.push("daydream/store");
-                            let client_config = ClientConfig::new().store_path(data_dir);
-                        }
-                    }
-                    let homeserver_url = Url::parse(&homeserver).unwrap();
-                    let client = Client::new_with_config(homeserver_url, client_config).unwrap();
-
-                    CLIENT.get_or_init(|| client.clone());
-
-                    data.login_running = true;
-                    login(ctx.get_external_handle(), mxid, password);
-                }),
-            ),
-    ))
-    .vertical()
-}
-
-fn main_ui() -> impl Widget<AppState> {
-    Flex::column().with_child(label_widget(
-        TextBox::new().lens(AppState::homeserver),
-        "BLUB",
-    ))
-}
-struct Delegate;
-
-impl AppDelegate<AppState> for Delegate {
-    fn command(
-        &mut self,
-        _ctx: &mut DelegateCtx,
-        _target: Target,
-        cmd: &Command,
-        data: &mut AppState,
-        _env: &Env,
-    ) -> bool {
-        if let Some(view) = cmd.get(SET_VIEW) {
-            data.login_running = false;
-
-            // Clear password from memory
-            data.password = "".into();
-
-            // Change View
-            data.current_view = *view;
-
-            println!("Set View to {:?}", view);
-        }
-        true
-    }
 }
