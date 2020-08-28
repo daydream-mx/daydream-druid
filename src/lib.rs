@@ -2,6 +2,7 @@ use druid::{
     widget::ViewSwitcher, AppLauncher, Data, Lens, LocalizedString, PlatformError, Selector, Size,
     Widget, WindowDesc,
 };
+use matrix::room::RoomList;
 use matrix_sdk::Client;
 use once_cell::sync::OnceCell;
 use std::sync::Arc;
@@ -61,7 +62,7 @@ pub struct AppState {
     current_view: View,
 
     // TODO proper types
-    rooms_list: Arc<Vec<u32>>,
+    rooms_list: RoomList,
     events_list: Arc<Vec<u32>>,
 
     new_message: String,
@@ -75,7 +76,6 @@ pub fn rmain() -> Result<(), PlatformError> {
     // create the initial app state
     let mut initial_state = AppState::default();
 
-    initial_state.rooms_list = Arc::new(vec![1, 2, 3, 4, 5, 6]);
     initial_state.events_list = Arc::new(vec![1, 2, 3, 4, 5, 6]);
     let delegate = utils::Delegate {};
 

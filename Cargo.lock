@@ -368,6 +368,7 @@ dependencies = [
  "console_error_panic_hook",
  "dirs",
  "druid",
+ "futures",
  "futures-locks",
  "matrix-sdk",
  "matrix-sdk-common-macros",

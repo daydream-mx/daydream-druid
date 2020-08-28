@@ -3,13 +3,19 @@ use druid::{
     widget::{Flex, Label, List, Scroll, TextBox},
     Color, UnitPoint, Widget, WidgetExt,
 };
+use matrix_sdk::Room;
+use std::sync::Arc;
+
 pub fn main_ui() -> impl Widget<AppState> {
     // RELOGIN if required
     crate::matrix::login::relogin();
 
     let mut flex = Flex::row();
+    // TODO Use AppState or ListIter
+    // TODO Only hold a Arc<Vec<Room>> in AppState (ARC ist important!)
+    // TODO keep content of that list to a minimum
     let room_list = List::new(|| {
-        Label::new(|item: &u32, _env: &_| format!("List item #{}", item))
+        Label::new(|room: &Arc<Room>, _env: &_| room.display_name())
             .align_vertical(UnitPoint::LEFT)
             .padding(10.0)
             .expand()
