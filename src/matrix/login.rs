@@ -103,23 +103,28 @@ pub async fn start_sync() {
         .add_event_emitter(Box::new(EventCallback {}))
         .await;
 
-    match locked_client.clone().sync_token().await {
-        Some(token) => {
-            let sync_settings = SyncSettings::new().token(token);
-            //client.clone().sync(sync_settings.clone()).await?;
-            locked_client
-                .clone()
-                .sync_forever(sync_settings, |_| async {})
-                .await;
+    let client: Client = locked_client.clone();
+
+    tokio::spawn(async move {
+        match client.clone().sync_token().await {
+            Some(token) => {
+                let sync_settings = SyncSettings::new().token(token);
+                //client.clone().sync(sync_settings.clone()).await?;
+                client
+                    .clone()
+                    .sync_forever(sync_settings, |_| async {})
+                    .await;
+            }
+            None => {
+                let sync_settings = SyncSettings::new();
+                client
+                    .clone()
+                    .sync_forever(sync_settings, |_| async {})
+                    .await;
+            }
         }
-        None => {
-            let sync_settings = SyncSettings::new();
-            locked_client
-                .clone()
-                .sync_forever(sync_settings, |_| async {})
-                .await;
-        }
-    }
+    });
+    println!("After sync");
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]

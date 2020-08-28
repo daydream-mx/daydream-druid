@@ -7,9 +7,6 @@ use matrix_sdk::Room;
 use std::sync::Arc;
 
 pub fn main_ui() -> impl Widget<AppState> {
-    // RELOGIN if required
-    crate::matrix::login::relogin();
-
     let mut flex = Flex::row();
     // TODO Use AppState or ListIter
     // TODO Only hold a Arc<Vec<Room>> in AppState (ARC ist important!)
