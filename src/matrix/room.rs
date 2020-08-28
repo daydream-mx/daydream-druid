@@ -31,44 +31,44 @@ impl RoomList {
                 let rooms = locked_client.joined_rooms();
 
                 let hashmap_rooms = rooms.read().await;
-                println!("hashmap_rooms locked");
                 if let Ok(mut data) = data.try_lock() {
-                    println!("data locked");
-
                     for value in hashmap_rooms.values() {
                         {
-                            println!("pre read_clone");
-                            let read_clone = value.read().await;
-                            println!("value: {}", read_clone.display_name());
-                            let clean_room = (*read_clone).clone();
-    
+                            //println!("pre read_clone");
+                            let clean_room = value.read().await.clone();
+
                             data.push(Arc::new(clean_room));
                         }
                     }
                     // TODO smarter dedup
                     data.dedup();
-                    println!("Done with rooms inner");
                 }
-                println!("Done with rooms outer");
             }
         }
     }
 
     /// Get the actual data of the roomlist from the matrix Client global
-    // While this also would work as a sttic method this should only get called in the context of ListIter
+    // While this also would work as a static method this should only get called in the context of ListIter
     fn data(&self, other: bool) -> Option<Vec<Arc<Room>>> {
         if !other && !self.fetching_rooms.swap(true, Ordering::Acquire) {
             let self_cache_data_clone = self.data_cache.clone();
-            futures::executor::block_on(async move {
+            let fetching_rooms = self.fetching_rooms.clone();
+            tokio::spawn(async move {
                 RoomList::get_rooms_from_client(self_cache_data_clone).await;
+                fetching_rooms.store(false, Ordering::Release);
                 // FIXME we should really force a rerender
             });
-            self.fetching_rooms.store(false, Ordering::Release);
         }
 
         if let Ok(data_cache) = self.data_cache.try_lock() {
             if !data_cache.is_empty() {
-                println!("data_cache_first: {}", data_cache[0].display_name());
+                println!(
+                    "data_cache_first: {:?}",
+                    data_cache
+                        .iter()
+                        .map(|x| x.display_name())
+                        .collect::<Vec<String>>()
+                );
                 return Some(data_cache.clone());
             }
         }
@@ -87,8 +87,10 @@ impl Data for RoomList {
             if let Some(self_data) = self_data {
                 if let Some(other_data) = other_data {
                     let same = self_data == other_data;
+                    println!("1");
                     return same;
                 } else {
+                    println!("2");
                     return false;
                 }
             }
@@ -96,16 +98,20 @@ impl Data for RoomList {
             if let Some(other_data) = other_data {
                 if let Some(self_data) = self_data {
                     let same = self_data == other_data;
+                    println!("3");
                     return same;
                 } else {
+                    println!("4");
                     return false;
                 }
             }
         } else if self_data.is_none() == other_data.is_none() {
             // this compares if they are both are none
+            println!("5");
             return true;
         }
         // Fallback to true to redurce renders
+        println!("6");
         true
     }
 }
