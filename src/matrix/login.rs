@@ -21,18 +21,24 @@ pub fn relogin() {
 
 async fn relogin_real() {
     if let Some(session) = Session::load() {
-        create_client(session.homeserver);
-        let locked_client = crate::CLIENT.get().unwrap().lock().await;
+        {
+            println!("Starting relogin");
+            create_client(session.homeserver);
+            let locked_client = crate::CLIENT.get().unwrap().lock().await;
 
-        let session = SDKSession {
-            access_token: session.access_token,
-            device_id: session.device_id.into(),
-            user_id: matrix_sdk::identifiers::UserId::try_from(session.user_id.as_str()).unwrap(),
-        };
+            let session = SDKSession {
+                access_token: session.access_token,
+                device_id: session.device_id.into(),
+                user_id: matrix_sdk::identifiers::UserId::try_from(session.user_id.as_str())
+                    .unwrap(),
+            };
 
-        if let Err(e) = locked_client.restore_login(session).await {
-            eprintln!("{}", e);
-        };
+            if let Err(e) = locked_client.restore_login(session).await {
+                eprintln!("{}", e);
+            };
+            println!("Finished relogin");
+        }
+        start_sync().await;
     }
 }
 
@@ -68,23 +74,30 @@ pub fn login(sink: druid::ExtEventSink, mxid: String, password: String) {
 }
 
 async fn login_real(sink: druid::ExtEventSink, mxid: String, password: String) {
-    let mut locked_client = crate::CLIENT.get().unwrap().lock().await;
-    let login_response = locked_client
-        .login(&mxid, &password, None, Some("Daydream druid"))
-        .await;
+    {
+        let locked_client = crate::CLIENT.get().unwrap().lock().await;
+        let login_response = locked_client
+            .login(&mxid, &password, None, Some("Daydream druid"))
+            .await;
 
-    if let Ok(login_response) = login_response {
-        let session = Session {
-            homeserver: locked_client.homeserver().to_string(),
-            user_id: login_response.user_id.to_string(),
-            access_token: login_response.access_token,
-            device_id: login_response.device_id.into(),
-        };
-        session.save();
+        if let Ok(login_response) = login_response {
+            let session = Session {
+                homeserver: locked_client.homeserver().to_string(),
+                user_id: login_response.user_id.to_string(),
+                access_token: login_response.access_token,
+                device_id: login_response.device_id.into(),
+            };
+            session.save();
+        }
+        println!("Login done!");
+        sink.submit_command(crate::SET_VIEW, crate::View::MainView, None)
+            .expect("command failed to submit");
     }
-    println!("Login done!");
-    sink.submit_command(crate::SET_VIEW, crate::View::MainView, None)
-        .expect("command failed to submit");
+    start_sync().await;
+}
+
+pub async fn start_sync() {
+    let mut locked_client = crate::CLIENT.get().unwrap().lock().await;
     println!("StartSync");
     locked_client
         .add_event_emitter(Box::new(EventCallback {}))
