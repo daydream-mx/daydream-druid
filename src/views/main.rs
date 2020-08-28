@@ -4,6 +4,9 @@ use druid::{
     Color, UnitPoint, Widget, WidgetExt,
 };
 pub fn main_ui() -> impl Widget<AppState> {
+    // RELOGIN if required
+    crate::matrix::login::relogin();
+
     let mut flex = Flex::row();
     let room_list = List::new(|| {
         Label::new(|item: &u32, _env: &_| format!("List item #{}", item))
@@ -43,9 +46,7 @@ pub fn main_ui() -> impl Widget<AppState> {
         .border(Color::WHITE, 1.0);
     event_side.add_child(event_list_full);
     event_side.add_flex_spacer(1.0);
-    event_side.add_child(
-        TextBox::new().lens(AppState::new_message).expand_width(),
-    );
+    event_side.add_child(TextBox::new().lens(AppState::new_message).expand_width());
     event_side.add_spacer(4.0);
     flex.add_flex_child(event_side, 3.0);
     flex

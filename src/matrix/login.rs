@@ -1,9 +1,59 @@
 use super::sync::EventCallback;
-use matrix_sdk::SyncSettings;
+use matrix_sdk::{Client, ClientConfig, Session as SDKSession, SyncSettings};
 use serde::{Deserialize, Serialize};
+use std::convert::TryFrom;
+use tokio::sync::Mutex;
+use url::Url;
+
+pub fn relogin() {
+    cfg_if::cfg_if! {
+        if #[cfg(any(target_arch = "wasm32"))] {
+            wasm_bindgen_futures::spawn_local(async move {
+                relogin_real().await;
+            });
+        } else {
+            tokio::spawn(async move {
+                relogin_real().await;
+            });
+        }
+    }
+}
+
+async fn relogin_real() {
+    if let Some(session) = Session::load() {
+        create_client(session.homeserver);
+        let locked_client = crate::CLIENT.get().unwrap().lock().await;
+
+        let session = SDKSession {
+            access_token: session.access_token,
+            device_id: session.device_id.into(),
+            user_id: matrix_sdk::identifiers::UserId::try_from(session.user_id.as_str()).unwrap(),
+        };
+
+        if let Err(e) = locked_client.restore_login(session).await {
+            eprintln!("{}", e);
+        };
+    }
+}
+
+pub fn create_client(homeserver: String) {
+    cfg_if::cfg_if! {
+        if #[cfg(any(target_arch = "wasm32"))] {
+            let client_config = ClientConfig::new();
+        } else {
+            let mut data_dir = dirs::data_dir().unwrap();
+            data_dir.push("daydream/store");
+            let client_config = ClientConfig::new().store_path(data_dir);
+        }
+    }
+
+    let homeserver_url = Url::parse(&homeserver).unwrap();
+    let client = Client::new_with_config(homeserver_url, client_config).unwrap();
+
+    crate::CLIENT.get_or_init(|| Mutex::new(client.clone()));
+}
 
 pub fn login(sink: druid::ExtEventSink, mxid: String, password: String) {
-    // TODO add non tokio variant for wasm
     cfg_if::cfg_if! {
         if #[cfg(any(target_arch = "wasm32"))] {
             wasm_bindgen_futures::spawn_local(async move {
