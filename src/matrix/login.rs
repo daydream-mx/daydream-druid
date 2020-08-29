@@ -148,8 +148,8 @@ impl Session {
                 // TODO. No-OP for now
             } else {
                 let mut data_dir = dirs::data_dir().unwrap();
-                data_dir.push("daydream");
-                serde_json::to_writer(&std::fs::File::create("session.json").unwrap(), self).unwrap();
+                data_dir.push("daydream/session.json");
+                serde_json::to_writer(&std::fs::File::create(data_dir).unwrap(), self).unwrap();
             }
         }
     }
@@ -161,8 +161,8 @@ impl Session {
                 None
             } else {
                 let mut data_dir = dirs::data_dir().unwrap();
-                data_dir.push("daydream");
-                let file = std::fs::File::open("session.json");
+                data_dir.push("daydream/session.json");
+                let file = std::fs::File::open(data_dir);
                 match file {
                     Ok(file) => {
                         let session: Result<Self,serde_json::Error> = serde_json::from_reader(&file);
