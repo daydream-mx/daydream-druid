@@ -1,7 +1,9 @@
 use super::sync::EventCallback;
+use crate::matrix::room::RoomListAsynSyncLogic;
 use matrix_sdk::{Client, ClientConfig, Session as SDKSession, SyncSettings};
 use serde::{Deserialize, Serialize};
 use std::convert::TryFrom;
+use std::sync::Arc;
 use tokio::sync::Mutex;
 use url::Url;
 
@@ -99,34 +101,42 @@ async fn login_real(sink: druid::ExtEventSink, mxid: String, password: String) {
 }
 
 pub async fn start_sync(sink: druid::ExtEventSink) {
-    let mut locked_client = crate::CLIENT.get().unwrap().lock().await;
-    println!("StartSync");
-    locked_client
-        .add_event_emitter(Box::new(EventCallback { sink }))
-        .await;
+    let room_list_logic = Arc::new(Mutex::new(RoomListAsynSyncLogic::default()));
+    {
+        let mut locked_client = crate::CLIENT.get().unwrap().lock().await;
+        println!("StartSync");
 
-    let client: Client = locked_client.clone();
+        locked_client
+            .add_event_emitter(Box::new(EventCallback {
+                sink,
+                room_list_logic: room_list_logic.clone(),
+            }))
+            .await;
 
-    tokio::spawn(async move {
-        match client.clone().sync_token().await {
-            Some(token) => {
-                let sync_settings = SyncSettings::new().token(token);
-                //client.clone().sync(sync_settings.clone()).await?;
-                client
-                    .clone()
-                    .sync_forever(sync_settings, |_| async {})
-                    .await;
+        let client: Client = locked_client.clone();
+
+        tokio::spawn(async move {
+            match client.clone().sync_token().await {
+                Some(token) => {
+                    let sync_settings = SyncSettings::new().token(token);
+                    client
+                        .clone()
+                        .sync_forever(sync_settings, |_| async {})
+                        .await;
+                }
+                None => {
+                    let sync_settings = SyncSettings::new();
+                    client
+                        .clone()
+                        .sync_forever(sync_settings, |_| async {})
+                        .await;
+                }
             }
-            None => {
-                let sync_settings = SyncSettings::new();
-                client
-                    .clone()
-                    .sync_forever(sync_settings, |_| async {})
-                    .await;
-            }
-        }
-    });
-    println!("After sync");
+        });
+        println!("After sync");
+    }
+    // Get the cache once
+    room_list_logic.lock().await.update_data().await;
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]

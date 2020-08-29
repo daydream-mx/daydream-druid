@@ -2,8 +2,7 @@ use druid::{
     widget::ViewSwitcher, AppLauncher, Data, Lens, LocalizedString, PlatformError, Selector, Size,
     Widget, WindowDesc,
 };
-use matrix::room::RoomList;
-use matrix_sdk::Client;
+use matrix_sdk::{Client, Room};
 use once_cell::sync::OnceCell;
 use std::sync::Arc;
 use tokio::sync::Mutex;
@@ -30,6 +29,9 @@ pub fn wasm_main() {
 const WINDOW_TITLE: LocalizedString<AppState> = LocalizedString::new("Daydream");
 
 const SET_VIEW: Selector<View> = Selector::new("event-daydream.set-view");
+pub const APPEND_ROOMLIST: Selector<Vec<Room>> = Selector::new("event-daydream.append-roomlist");
+pub const REMOVE_ROOMLIST_ITEMS: Selector<Vec<Room>> =
+    Selector::new("event-daydream.remove-roomlist-items");
 pub const FORCE_RERENDER: Selector<()> = Selector::new("event-daydream.force-rerender");
 
 static CLIENT: OnceCell<Mutex<Client>> = OnceCell::new();
@@ -66,7 +68,7 @@ pub struct AppState {
     current_view: View,
 
     // TODO proper types
-    rooms_list: RoomList,
+    rooms_list: Arc<Vec<Arc<Room>>>,
     events_list: Arc<Vec<u32>>,
 
     new_message: String,
@@ -86,7 +88,9 @@ pub fn rmain() -> Result<(), PlatformError> {
     let launcher = AppLauncher::with_window(main_window).delegate(delegate);
 
     let event_sink = launcher.get_external_handle();
-    EVENT_SINK.set(event_sink);
+    if EVENT_SINK.set(event_sink).is_err() {
+        panic!();
+    }
     launcher.launch(initial_state)
 }
 

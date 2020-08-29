@@ -8,10 +8,40 @@ use std::sync::Arc;
 
 struct ForceRerender;
 
-impl<T, W: Widget<T>> Controller<T, W> for ForceRerender {
-    fn event(&mut self, child: &mut W, ctx: &mut EventCtx, event: &Event, data: &mut T, env: &Env) {
+impl<W: Widget<AppState>> Controller<AppState, W> for ForceRerender {
+    fn event(
+        &mut self,
+        child: &mut W,
+        ctx: &mut EventCtx,
+        event: &Event,
+        data: &mut AppState,
+        env: &Env,
+    ) {
         if let Event::Command(cmd) = event {
             if cmd.is(crate::FORCE_RERENDER) {
+                ctx.request_update();
+            }
+
+            if let Some(room_list) = cmd.get(crate::APPEND_ROOMLIST) {
+                let mut new_room_list = Vec::with_capacity(data.rooms_list.len() + room_list.len());
+                for room in data.rooms_list.iter() {
+                    new_room_list.push(room.clone());
+                }
+                for room in room_list {
+                    new_room_list.push(Arc::new(room.clone()));
+                }
+                data.rooms_list = Arc::new(new_room_list);
+                ctx.request_update();
+            }
+
+            if let Some(items) = cmd.get(crate::REMOVE_ROOMLIST_ITEMS) {
+                let mut new_room_list = Vec::with_capacity(data.rooms_list.len() - items.len());
+                for room in data.rooms_list.iter() {
+                    if !items.iter().any(|x| x.room_id == room.room_id) {
+                        new_room_list.push(room.clone());
+                    }
+                }
+                data.rooms_list = Arc::new(new_room_list);
                 ctx.request_update();
             }
         }
