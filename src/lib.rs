@@ -30,8 +30,12 @@ pub fn wasm_main() {
 const WINDOW_TITLE: LocalizedString<AppState> = LocalizedString::new("Daydream");
 
 const SET_VIEW: Selector<View> = Selector::new("event-daydream.set-view");
+pub const FORCE_RERENDER: Selector<()> = Selector::new("event-daydream.force-rerender");
 
 static CLIENT: OnceCell<Mutex<Client>> = OnceCell::new();
+
+// WARNING this might have bad problems
+static EVENT_SINK: OnceCell<druid::ExtEventSink> = OnceCell::new();
 
 #[derive(Clone, Copy, Data, PartialEq, Debug)]
 enum View {
@@ -79,9 +83,11 @@ pub fn rmain() -> Result<(), PlatformError> {
     initial_state.events_list = Arc::new(vec![1, 2, 3, 4, 5, 6]);
     let delegate = utils::Delegate {};
 
-    AppLauncher::with_window(main_window)
-        .delegate(delegate)
-        .launch(initial_state)
+    let launcher = AppLauncher::with_window(main_window).delegate(delegate);
+
+    let event_sink = launcher.get_external_handle();
+    EVENT_SINK.set(event_sink);
+    launcher.launch(initial_state)
 }
 
 fn ui_builder() -> impl Widget<AppState> {

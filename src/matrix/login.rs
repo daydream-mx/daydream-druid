@@ -5,21 +5,21 @@ use std::convert::TryFrom;
 use tokio::sync::Mutex;
 use url::Url;
 
-pub fn relogin() {
+pub fn relogin(sink: druid::ExtEventSink) {
     cfg_if::cfg_if! {
         if #[cfg(any(target_arch = "wasm32"))] {
             wasm_bindgen_futures::spawn_local(async move {
-                relogin_real().await;
+                relogin_real(sink).await;
             });
         } else {
             tokio::spawn(async move {
-                relogin_real().await;
+                relogin_real(sink).await;
             });
         }
     }
 }
 
-async fn relogin_real() {
+async fn relogin_real(sink: druid::ExtEventSink) {
     if let Some(session) = Session::load() {
         {
             println!("Starting relogin");
@@ -37,8 +37,10 @@ async fn relogin_real() {
                 eprintln!("{}", e);
             };
             println!("Finished relogin");
+            sink.submit_command(crate::SET_VIEW, crate::View::MainView, None)
+                .expect("command failed to submit");
         }
-        start_sync().await;
+        start_sync(sink).await;
     }
 }
 
@@ -93,14 +95,14 @@ async fn login_real(sink: druid::ExtEventSink, mxid: String, password: String) {
         sink.submit_command(crate::SET_VIEW, crate::View::MainView, None)
             .expect("command failed to submit");
     }
-    start_sync().await;
+    start_sync(sink).await;
 }
 
-pub async fn start_sync() {
+pub async fn start_sync(sink: druid::ExtEventSink) {
     let mut locked_client = crate::CLIENT.get().unwrap().lock().await;
     println!("StartSync");
     locked_client
-        .add_event_emitter(Box::new(EventCallback {}))
+        .add_event_emitter(Box::new(EventCallback { sink }))
         .await;
 
     let client: Client = locked_client.clone();

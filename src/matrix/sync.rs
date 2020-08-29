@@ -6,7 +6,10 @@ use matrix_sdk::{
     EventEmitter, SyncRoom,
 };
 use matrix_sdk_common_macros::async_trait;
-pub struct EventCallback;
+
+pub struct EventCallback {
+    pub sink: druid::ExtEventSink,
+}
 
 #[async_trait]
 impl EventEmitter for EventCallback {

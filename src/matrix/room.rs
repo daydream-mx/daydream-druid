@@ -12,9 +12,6 @@ pub struct RoomList {
 
 impl Default for RoomList {
     fn default() -> Self {
-        // RELOGIN if required (Hack but we know that the room list only exists if we are in the Main View ^^)
-        crate::matrix::login::relogin();
-
         let data = Arc::new(Mutex::new(vec![]));
         RoomList {
             data_cache: data,
@@ -31,17 +28,28 @@ impl RoomList {
                 let rooms = locked_client.joined_rooms();
 
                 let hashmap_rooms = rooms.read().await;
+
+                let mut new_list: Vec<Arc<Room>> = Vec::with_capacity(hashmap_rooms.len());
                 if let Ok(mut data) = data.try_lock() {
                     for value in hashmap_rooms.values() {
                         {
                             //println!("pre read_clone");
                             let clean_room = value.read().await.clone();
 
-                            data.push(Arc::new(clean_room));
+                            new_list.push(Arc::new(clean_room));
                         }
                     }
-                    // TODO smarter dedup
-                    data.dedup();
+
+                    if !new_list.eq(&*data) {
+                        *data = new_list;
+
+                        crate::EVENT_SINK
+                            .get()
+                            .unwrap()
+                            .clone()
+                            .submit_command(crate::FORCE_RERENDER, (), None)
+                            .expect("command failed to submit");
+                    }
                 }
             }
         }
@@ -56,19 +64,11 @@ impl RoomList {
             tokio::spawn(async move {
                 RoomList::get_rooms_from_client(self_cache_data_clone).await;
                 fetching_rooms.store(false, Ordering::Release);
-                // FIXME we should really force a rerender
             });
         }
 
         if let Ok(data_cache) = self.data_cache.try_lock() {
             if !data_cache.is_empty() {
-                println!(
-                    "data_cache_first: {:?}",
-                    data_cache
-                        .iter()
-                        .map(|x| x.display_name())
-                        .collect::<Vec<String>>()
-                );
                 return Some(data_cache.clone());
             }
         }
@@ -86,32 +86,24 @@ impl Data for RoomList {
         if self_data.is_some() || other_data.is_some() {
             if let Some(self_data) = self_data {
                 if let Some(other_data) = other_data {
-                    let same = self_data == other_data;
-                    println!("1");
-                    return same;
+                    return self_data == other_data;
                 } else {
-                    println!("2");
                     return false;
                 }
             }
 
             if let Some(other_data) = other_data {
                 if let Some(self_data) = self_data {
-                    let same = self_data == other_data;
-                    println!("3");
-                    return same;
+                    return self_data == other_data;
                 } else {
-                    println!("4");
                     return false;
                 }
             }
         } else if self_data.is_none() == other_data.is_none() {
             // this compares if they are both are none
-            println!("5");
             return true;
         }
         // Fallback to true to redurce renders
-        println!("6");
         true
     }
 }
@@ -122,6 +114,7 @@ impl ListIter<Arc<Room>> for RoomList {
         if let Some(data_cache) = self.data(true) {
             if !data_cache.is_empty() {
                 for (i, item) in data_cache.iter().enumerate() {
+                    // println!("Item: {}", item.display_name());
                     cb(item, i);
                 }
             }
@@ -152,7 +145,7 @@ impl ListIter<Arc<Room>> for RoomList {
     }
 
     fn data_len(&self) -> usize {
-        if let Some(data_cache) = self.data(true) {
+        if let Some(data_cache) = self.data(false) {
             return data_cache.len();
         }
         0
