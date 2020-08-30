@@ -65,6 +65,7 @@ pub fn main_ui() -> impl Widget<AppState> {
             .background(Color::rgb8(41, 41, 41))
             .border(Color::BLACK, 1.0)
     })
+    .fix_width(300.0)
     .lens(AppState::rooms_list)
     .controller(ForceRerender {});
     let event_list = List::new(|| {
@@ -77,13 +78,12 @@ pub fn main_ui() -> impl Widget<AppState> {
             .border(Color::BLACK, 1.0)
     });
 
-    flex.add_flex_child(
+    flex.add_child(
         Scroll::new(room_list)
             .vertical()
             .expand_height()
             .background(Color::rgb8(41, 41, 41))
             .border(Color::WHITE, 1.0),
-        1.0,
     );
 
     let mut event_side = Flex::column();
@@ -97,6 +97,6 @@ pub fn main_ui() -> impl Widget<AppState> {
     event_side.add_flex_spacer(1.0);
     event_side.add_child(TextBox::new().lens(AppState::new_message).expand_width());
     event_side.add_spacer(4.0);
-    flex.add_flex_child(event_side, 3.0);
+    flex.add_flex_child(event_side,1.0);
     flex
 }
