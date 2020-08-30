@@ -76,7 +76,7 @@ pub struct AppState {
 
 pub fn rmain() -> Result<(), PlatformError> {
     let main_window = WindowDesc::new(ui_builder)
-        .with_min_size(Size::new(800.0, 400.0))
+        .window_size(Size::new(800.0, 600.0))
         .title(WINDOW_TITLE);
 
     // create the initial app state

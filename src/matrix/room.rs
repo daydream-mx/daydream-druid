@@ -19,10 +19,10 @@ impl Default for RoomListAsynSyncLogic {
 
 impl RoomListAsynSyncLogic {
     pub fn add_room_if_new(&mut self, new_room: Room) {
-        if self
+        if !self
             .data_cache
             .iter()
-            .any(|room| room.room_id == new_room.room_id)
+            .any(|room| room.room_id == new_room.room_id) && new_room.tombstone.is_none()
         {
             self.data_cache.push(new_room.clone());
             let subset_vec = vec![new_room];
@@ -67,7 +67,11 @@ impl RoomListAsynSyncLogic {
                         //println!("pre read_clone");
                         let clean_room = value.read().await.clone();
 
-                        new_list.push(clean_room);
+                        // TODO check if we are in the new room and if not display a way to get to the new one
+                        if clean_room.tombstone.is_none() {
+                            new_list.push(clean_room);
+                        }
+
                     }
                 }
 
