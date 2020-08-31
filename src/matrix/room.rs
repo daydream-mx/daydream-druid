@@ -171,14 +171,16 @@ impl EventListAsynSyncLogic {
         {
             self.data_cache = new_list.clone();
 
-            crate::EVENT_SINK
+            /*crate::EVENT_SINK
                 .get()
                 .unwrap()
                 .clone()
                 .submit_command(crate::APPEND_EVENTLIST, new_list, None)
-                .expect("command failed to submit");
+                .expect("command failed to submit");*/
         }
     }
+
+    // TODO switch room
 
     /// Get the actual data of the roomlist from the matrix Client global
     pub async fn update_data(&mut self, room: Room) {

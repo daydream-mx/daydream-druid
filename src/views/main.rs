@@ -3,7 +3,13 @@ use druid::{
     widget::{Controller, Flex, Label, List, Scroll, TextBox},
     Color, Env, Event, EventCtx, UnitPoint, Widget, WidgetExt,
 };
-use matrix_sdk::{events::AnySyncMessageEvent, Room};
+use matrix_sdk::{
+    events::{
+        room::message::{MessageEventContent, TextMessageEventContent},
+        AnySyncMessageEvent, SyncMessageEvent,
+    },
+    Room,
+};
 use std::sync::Arc;
 
 struct RoomListController;
@@ -66,7 +72,8 @@ impl<W: Widget<AppState>> Controller<AppState, W> for EventListController {
             }
 
             if let Some(events_list) = cmd.get(crate::APPEND_EVENTLIST) {
-                let mut new_events_list = Vec::with_capacity(data.events_list.len() + events_list.len());
+                let mut new_events_list =
+                    Vec::with_capacity(data.events_list.len() + events_list.len());
                 for event in data.events_list.iter() {
                     new_events_list.push(event.clone());
                 }
@@ -74,6 +81,12 @@ impl<W: Widget<AppState>> Controller<AppState, W> for EventListController {
                     new_events_list.push(Arc::new(event.clone()));
                 }
                 data.events_list = Arc::new(new_events_list);
+                ctx.request_update();
+            }
+
+            if let Some(room_id) = cmd.get(crate::SWITCH_ROOM) {
+                data.current_room = room_id.to_string();
+                println!("Set current room to {:?}", room_id);
                 ctx.request_update();
             }
         }
@@ -106,13 +119,33 @@ pub fn main_ui() -> impl Widget<AppState> {
     .controller(RoomListController {});
 
     let event_list = List::new(|| {
-        Label::new(|item: &Arc<AnySyncMessageEvent>, _env: &_| format!("#{:?}", item))
-            .align_vertical(UnitPoint::LEFT)
-            .padding(10.0)
-            .expand()
-            .height(50.0)
-            .background(Color::rgb8(41, 41, 41))
-            .border(Color::BLACK, 1.0)
+        Label::new(|event: &Arc<AnySyncMessageEvent>, _env: &_| {
+            #[allow(clippy::single_match)]
+            match **event {
+                AnySyncMessageEvent::RoomMessage(ref event) => {
+                    if let SyncMessageEvent {
+                        content:
+                            MessageEventContent::Text(TextMessageEventContent {
+                                body: msg_body, ..
+                            }),
+                        sender,
+                        ..
+                    } = event
+                    {
+                        return format!("<{}>: {}", sender, msg_body);
+                    };
+                }
+                _ => {}
+            }
+
+            "".to_string()
+        })
+        .align_vertical(UnitPoint::LEFT)
+        .padding(10.0)
+        .expand()
+        .height(50.0)
+        .background(Color::rgb8(41, 41, 41))
+        .border(Color::BLACK, 1.0)
     })
     .lens(AppState::events_list)
     .controller(EventListController {});

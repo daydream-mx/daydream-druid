@@ -21,8 +21,11 @@ impl EventEmitter for EventCallback {
     async fn on_room_message(&self, room: SyncRoom, event: &SyncMessageEvent<MessageEventContent>) {
         if let SyncRoom::Joined(room) = room {
             if let SyncMessageEvent {
-                content: MessageEventContent::Text(TextMessageEventContent { body: msg_body, .. }),
-                sender,
+                content:
+                    MessageEventContent::Text(TextMessageEventContent {
+                        body: _msg_body, ..
+                    }),
+                sender: _sender,
                 ..
             } = event
             {
@@ -37,7 +40,7 @@ impl EventEmitter for EventCallback {
                         .add_event_if_new((*event).clone());
                 }
                 // TODO actual logic
-                println!("<{}>: {}", sender, msg_body);
+                //println!("<{}>: {}", sender, msg_body);
             }
         }
     }
