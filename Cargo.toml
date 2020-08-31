@@ -16,7 +16,7 @@ path = "src/bin/desktop.rs"
 
 [dependencies]
 druid = { git = "https://github.com/linebender/druid.git", features = ["image"] }
-matrix-sdk = { version = "0.1.0", git = "https://github.com/matrix-org/matrix-rust-sdk", default-features = false, features = ["messages", "rustls-tls"]} # features = ["encryption"]}
+matrix-sdk = { version = "0.1.0", git = "https://github.com/matrix-org/matrix-rust-sdk", default-features = false, features = ["messages", "rustls-tls", "encryption"]} # features = ["encryption"]}
 matrix-sdk-common-macros = { version = "0.1.0", git = "https://github.com/matrix-org/matrix-rust-sdk"}
 async-trait = "0.1"
 url = "2.1.1"
@@ -42,6 +42,9 @@ dirs = "3.0"
 wasm-bindgen = "0.2.67"
 console_error_panic_hook = "0.1.6"
 wasm-bindgen-futures = "0.4"
+
+[patch.crates-io]
+olm-sys = { git = "https://gitlab.gnome.org/MTRNord/olm-sys.git", branch = "cmake", features = ["serde"]} 
 
 [profile.release]
 # less code to include into binary

@@ -1,9 +1,13 @@
+#![feature(iter_order_by)]
+
+use crate::matrix::room::EventListAsynSyncLogic;
 use druid::{
     widget::ViewSwitcher, AppLauncher, Data, Lens, LocalizedString, PlatformError, Selector, Size,
     Widget, WindowDesc,
 };
-use matrix_sdk::{Client, Room};
+use matrix_sdk::{events::AnySyncMessageEvent, identifiers::RoomId, Client, Room};
 use once_cell::sync::OnceCell;
+use std::collections::HashMap;
 use std::sync::Arc;
 use tokio::sync::Mutex;
 use views::login::login_ui;
@@ -34,7 +38,15 @@ pub const REMOVE_ROOMLIST_ITEMS: Selector<Vec<Room>> =
     Selector::new("event-daydream.remove-roomlist-items");
 pub const FORCE_RERENDER: Selector<()> = Selector::new("event-daydream.force-rerender");
 
+pub const SWITCH_ROOM: Selector<RoomId> = Selector::new("event-daydream.switch-room");
+
+pub const APPEND_EVENTLIST: Selector<Vec<AnySyncMessageEvent>> =
+    Selector::new("event-daydream.append-eventlist");
+
 static CLIENT: OnceCell<Mutex<Client>> = OnceCell::new();
+
+static ROOM_TO_EVENTS_MAP: OnceCell<Mutex<HashMap<String, Mutex<EventListAsynSyncLogic>>>> =
+    OnceCell::new();
 
 // WARNING this might have bad problems
 static EVENT_SINK: OnceCell<druid::ExtEventSink> = OnceCell::new();
@@ -67,11 +79,11 @@ pub struct AppState {
     login_running: bool,
     current_view: View,
 
-    // TODO proper types
     rooms_list: Arc<Vec<Arc<Room>>>,
-    events_list: Arc<Vec<u32>>,
+    events_list: Arc<Vec<Arc<AnySyncMessageEvent>>>,
 
     new_message: String,
+    current_room: String,
 }
 
 pub fn rmain() -> Result<(), PlatformError> {
@@ -80,9 +92,7 @@ pub fn rmain() -> Result<(), PlatformError> {
         .title(WINDOW_TITLE);
 
     // create the initial app state
-    let mut initial_state = AppState::default();
-
-    initial_state.events_list = Arc::new(vec![1, 2, 3, 4, 5, 6]);
+    let initial_state = AppState::default();
     let delegate = utils::Delegate {};
 
     let launcher = AppLauncher::with_window(main_window).delegate(delegate);

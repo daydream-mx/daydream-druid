@@ -26,6 +26,10 @@ impl AppDelegate<AppState> for Delegate {
 
             println!("Set View to {:?}", view);
         }
+        if let Some(room_id) = cmd.get(crate::SWITCH_ROOM) {
+            data.current_room = room_id.to_string();
+            println!("Set current room to {:?}", room_id);
+        }
         true
     }
 }

@@ -19,13 +19,23 @@ pub struct EventCallback {
 #[async_trait]
 impl EventEmitter for EventCallback {
     async fn on_room_message(&self, room: SyncRoom, event: &SyncMessageEvent<MessageEventContent>) {
-        if let SyncRoom::Joined(_room) = room {
+        if let SyncRoom::Joined(room) = room {
             if let SyncMessageEvent {
                 content: MessageEventContent::Text(TextMessageEventContent { body: msg_body, .. }),
                 sender,
                 ..
             } = event
             {
+                let clean_room = room.read().await.clone();
+                let room_to_events_map = crate::ROOM_TO_EVENTS_MAP.get().unwrap().lock().await;
+                if let Some(events_handler) =
+                    room_to_events_map.get(&clean_room.room_id.to_string())
+                {
+                    events_handler
+                        .lock()
+                        .await
+                        .add_event_if_new((*event).clone());
+                }
                 // TODO actual logic
                 println!("<{}>: {}", sender, msg_body);
             }
@@ -51,7 +61,7 @@ impl EventEmitter for EventCallback {
                         self.room_list_logic.lock().await.remove_room(clean_room);
                     }
                     _ => {
-                         //TODO add a way of displaying Invites in the UI. This will need to be done in `on_stripped_state_member`
+                        //TODO add a way of displaying Invites in the UI. This will need to be done in `on_stripped_state_member`
                     }
                 }
             }

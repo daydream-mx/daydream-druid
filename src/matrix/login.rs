@@ -2,6 +2,7 @@ use super::sync::EventCallback;
 use crate::matrix::room::RoomListAsynSyncLogic;
 use matrix_sdk::{Client, ClientConfig, Session as SDKSession, SyncSettings};
 use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
 use std::convert::TryFrom;
 use std::sync::Arc;
 use tokio::sync::Mutex;
@@ -101,6 +102,13 @@ async fn login_real(sink: druid::ExtEventSink, mxid: String, password: String) {
 }
 
 pub async fn start_sync(sink: druid::ExtEventSink) {
+    if crate::ROOM_TO_EVENTS_MAP
+        .set(Mutex::new(HashMap::new()))
+        .is_err()
+    {
+        panic!();
+    }
+
     let room_list_logic = Arc::new(Mutex::new(RoomListAsynSyncLogic::default()));
     {
         let mut locked_client = crate::CLIENT.get().unwrap().lock().await;
