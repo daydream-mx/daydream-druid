@@ -131,6 +131,7 @@ jobs:
         with:
           toolchain: nightly
           profile: minimal
+          components: clippy
           override: true
 
       # Test packages in deeper-to-higher dependency order
