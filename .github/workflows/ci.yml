@@ -73,7 +73,7 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
-      - uses: lovasoa/setup-emscripten@master
+      - uses: mymindstorm/setup-emsdk@v6
 
       # libgtk-dev seems to be needed by e.g. druid-derive
       - name: install libgtk-dev
