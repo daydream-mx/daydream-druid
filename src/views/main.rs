@@ -177,9 +177,10 @@ pub fn main_ui() -> impl Widget<AppState> {
         .vertical()
         //.expand_height()
         .background(Color::rgb8(41, 41, 41))
-        .border(Color::WHITE, 1.0);
+        .border(Color::WHITE, 1.0)
+        .align_vertical(UnitPoint::BOTTOM)
+        .expand();
     event_side.add_flex_child(event_list_full, 1.0);
-    event_side.add_flex_spacer(1.0);
     event_side.add_child(TextBox::new().lens(AppState::new_message).expand_width());
     event_side.add_spacer(4.0);
     flex.add_flex_child(event_side, 1.0);
