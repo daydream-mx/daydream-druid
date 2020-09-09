@@ -5,11 +5,11 @@ use matrix_sdk::{
         room::message::{MessageEventContent, TextMessageEventContent},
         SyncMessageEvent, SyncStateEvent,
     },
+    locks::Mutex,
     EventEmitter, SyncRoom,
 };
 use matrix_sdk_common_macros::async_trait;
 use std::sync::Arc;
-use tokio::sync::Mutex;
 
 pub struct EventCallback {
     pub sink: druid::ExtEventSink,

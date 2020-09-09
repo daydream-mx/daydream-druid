@@ -6,11 +6,10 @@ use druid::{
     widget::ViewSwitcher, AppLauncher, Data, Lens, LocalizedString, PlatformError, Selector, Size,
     Widget, WindowDesc,
 };
-use matrix_sdk::{events::AnySyncMessageEvent, identifiers::RoomId, Client, Room};
+use matrix_sdk::{events::AnySyncMessageEvent, identifiers::RoomId, locks::Mutex, Client, Room};
 use once_cell::sync::OnceCell;
 use std::collections::HashMap;
 use std::sync::Arc;
-use tokio::sync::Mutex;
 use utils::EventListAppedStruct;
 use views::login::login_ui;
 use views::main::main_ui;

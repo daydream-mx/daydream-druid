@@ -1624,9 +1624,8 @@ dependencies = [
 [[package]]
 name = "olm-sys"
 version = "0.2.0"
-source = "git+https://gitlab.gnome.org/BrainBlasted/olm-sys.git?branch=master#8ff4aaec8552ef276664a4fdf27dc353e88d2fea"
+source = "git+https://gitlab.gnome.org/BrainBlasted/olm-sys.git?branch=master#fe079b70f46878e36c683935e4144c0ad30462d3"
 dependencies = [
- "cfg-if",
  "cmake",
 ]
 
