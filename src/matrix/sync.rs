@@ -6,7 +6,7 @@ use matrix_sdk::{
         SyncMessageEvent, SyncStateEvent,
     },
     locks::Mutex,
-    EventEmitter, SyncRoom,
+    Client, EventEmitter, SyncRoom,
 };
 use matrix_sdk_common_macros::async_trait;
 use std::sync::Arc;
@@ -14,6 +14,7 @@ use std::sync::Arc;
 pub struct EventCallback {
     pub sink: druid::ExtEventSink,
     pub room_list_logic: Arc<Mutex<RoomListAsynSyncLogic>>,
+    pub client: Client,
 }
 
 #[async_trait]
@@ -47,8 +48,7 @@ impl EventEmitter for EventCallback {
     async fn on_room_member(&self, room: SyncRoom, event: &SyncStateEvent<MemberEventContent>) {
         #[allow(irrefutable_let_patterns)]
         if let SyncStateEvent { sender, .. } = event {
-            let locked_client = crate::CLIENT.get().unwrap().lock().await;
-            if sender == &locked_client.user_id().await.unwrap() {
+            if sender == &self.client.user_id().await.unwrap() {
                 match room {
                     SyncRoom::Joined(room) => {
                         let clean_room = room.read().await.clone();

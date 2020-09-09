@@ -6,7 +6,7 @@ use druid::{
     widget::ViewSwitcher, AppLauncher, Data, Lens, LocalizedString, PlatformError, Selector, Size,
     Widget, WindowDesc,
 };
-use matrix_sdk::{events::AnySyncMessageEvent, identifiers::RoomId, locks::Mutex, Client, Room};
+use matrix_sdk::{events::AnySyncMessageEvent, identifiers::RoomId, locks::Mutex, Room};
 use once_cell::sync::OnceCell;
 use std::collections::HashMap;
 use std::sync::Arc;
@@ -45,8 +45,6 @@ pub const SET_EVENTLIST: Selector<Vec<AnySyncMessageEvent>> =
     Selector::new("event-daydream.set-eventlist");
 pub const APPEND_EVENTLIST: Selector<EventListAppedStruct> =
     Selector::new("event-daydream.append-eventlist");
-
-static CLIENT: OnceCell<Mutex<Client>> = OnceCell::new();
 
 static ROOM_TO_EVENTS_MAP: OnceCell<Mutex<HashMap<String, Mutex<EventListAsynSyncLogic>>>> =
     OnceCell::new();

@@ -24,30 +24,27 @@ pub fn relogin(sink: druid::ExtEventSink) {
 
 async fn relogin_real(sink: druid::ExtEventSink) {
     if let Some(session) = Session::load() {
-        {
-            println!("Starting relogin");
-            create_client(session.homeserver);
-            let locked_client = crate::CLIENT.get().unwrap().lock().await;
+        println!("Starting relogin");
+        let client = create_client(session.homeserver);
 
-            let session = SDKSession {
-                access_token: session.access_token,
-                device_id: session.device_id.into(),
-                user_id: matrix_sdk::identifiers::UserId::try_from(session.user_id.as_str())
-                    .unwrap(),
-            };
+        let session = SDKSession {
+            access_token: session.access_token,
+            device_id: session.device_id.into(),
+            user_id: matrix_sdk::identifiers::UserId::try_from(session.user_id.as_str()).unwrap(),
+        };
 
-            if let Err(e) = locked_client.restore_login(session).await {
-                eprintln!("{}", e);
-            };
-            println!("Finished relogin");
-            sink.submit_command(crate::SET_VIEW, crate::View::MainView, Target::Auto)
-                .expect("command failed to submit");
-        }
-        start_sync(sink).await;
+        if let Err(e) = client.restore_login(session).await {
+            eprintln!("{}", e);
+        };
+        println!("Finished relogin");
+        sink.submit_command(crate::SET_VIEW, crate::View::MainView, Target::Auto)
+            .expect("command failed to submit");
+
+        start_sync(sink, client).await;
     }
 }
 
-pub fn create_client(homeserver: String) {
+pub fn create_client(homeserver: String) -> Client {
     cfg_if::cfg_if! {
         if #[cfg(any(target_arch = "wasm32"))] {
             let client_config = ClientConfig::new();
@@ -59,35 +56,32 @@ pub fn create_client(homeserver: String) {
     }
 
     let homeserver_url = Url::parse(&homeserver).unwrap();
-    let client = Client::new_with_config(homeserver_url, client_config).unwrap();
-
-    crate::CLIENT.get_or_init(|| Mutex::new(client.clone()));
+    Client::new_with_config(homeserver_url, client_config).unwrap()
 }
 
-pub fn login(sink: druid::ExtEventSink, mxid: String, password: String) {
+pub fn login(sink: druid::ExtEventSink, client: Client, mxid: String, password: String) {
     cfg_if::cfg_if! {
         if #[cfg(any(target_arch = "wasm32"))] {
             wasm_bindgen_futures::spawn_local(async move {
-                login_real(sink, mxid, password).await;
+                login_real(sink, client, mxid, password).await;
             });
         } else {
             tokio::spawn(async move {
-                login_real(sink, mxid, password).await;
+                login_real(sink, client, mxid, password).await;
             });
         }
     }
 }
 
-async fn login_real(sink: druid::ExtEventSink, mxid: String, password: String) {
+async fn login_real(sink: druid::ExtEventSink, client: Client, mxid: String, password: String) {
     {
-        let locked_client = crate::CLIENT.get().unwrap().lock().await;
-        let login_response = locked_client
+        let login_response = client
             .login(&mxid, &password, None, Some("Daydream druid"))
             .await;
 
         if let Ok(login_response) = login_response {
             let session = Session {
-                homeserver: locked_client.homeserver().to_string(),
+                homeserver: client.homeserver().to_string(),
                 user_id: login_response.user_id.to_string(),
                 access_token: login_response.access_token,
                 device_id: login_response.device_id.into(),
@@ -98,10 +92,10 @@ async fn login_real(sink: druid::ExtEventSink, mxid: String, password: String) {
         sink.submit_command(crate::SET_VIEW, crate::View::MainView, Target::Auto)
             .expect("command failed to submit");
     }
-    start_sync(sink).await;
+    start_sync(sink, client).await;
 }
 
-pub async fn start_sync(sink: druid::ExtEventSink) {
+pub async fn start_sync(sink: druid::ExtEventSink, mut client: Client) {
     if crate::ROOM_TO_EVENTS_MAP
         .set(Mutex::new(HashMap::new()))
         .is_err()
@@ -109,19 +103,17 @@ pub async fn start_sync(sink: druid::ExtEventSink) {
         panic!();
     }
 
-    let room_list_logic = Arc::new(Mutex::new(RoomListAsynSyncLogic::default()));
+    let room_list_logic = Arc::new(Mutex::new(RoomListAsynSyncLogic::new(client.clone())));
     {
-        let mut locked_client = crate::CLIENT.get().unwrap().lock().await;
         println!("StartSync");
 
-        locked_client
+        client
             .add_event_emitter(Box::new(EventCallback {
                 sink,
                 room_list_logic: room_list_logic.clone(),
+                client: client.clone(),
             }))
             .await;
-
-        let client: Client = locked_client.clone();
 
         cfg_if::cfg_if! {
             if #[cfg(any(target_arch = "wasm32"))] {

@@ -7,7 +7,7 @@ use matrix_sdk::{
     },
     identifiers::RoomId,
     locks::Mutex,
-    Room,
+    Client, Room,
 };
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
@@ -16,18 +16,18 @@ use std::sync::Arc;
 pub struct RoomListAsynSyncLogic {
     data_cache: Vec<Room>,
     fetching_rooms: Arc<AtomicBool>,
-}
-
-impl Default for RoomListAsynSyncLogic {
-    fn default() -> Self {
-        RoomListAsynSyncLogic {
-            data_cache: vec![],
-            fetching_rooms: Arc::new(AtomicBool::new(false)),
-        }
-    }
+    client: Client,
 }
 
 impl RoomListAsynSyncLogic {
+    pub fn new(client: Client) -> Self {
+        RoomListAsynSyncLogic {
+            data_cache: vec![],
+            fetching_rooms: Arc::new(AtomicBool::new(false)),
+            client,
+        }
+    }
+
     pub fn add_room_if_new(&mut self, new_room: Room) {
         if !self
             .data_cache
@@ -65,49 +65,43 @@ impl RoomListAsynSyncLogic {
     }
 
     async fn get_rooms_from_client(&mut self) {
-        if let Some(available_client) = crate::CLIENT.get() {
-            if let Ok(locked_client) = available_client.try_lock() {
-                // TODO consider showing other types (this might involve refactoring)
-                let rooms = locked_client.joined_rooms();
+        // TODO consider showing other types (this might involve refactoring)
+        let rooms = self.client.joined_rooms();
 
-                let hashmap_rooms = rooms.read().await;
+        let hashmap_rooms = rooms.read().await;
 
-                let mut room_to_events_map = crate::ROOM_TO_EVENTS_MAP.get().unwrap().lock().await;
+        let mut room_to_events_map = crate::ROOM_TO_EVENTS_MAP.get().unwrap().lock().await;
 
-                let mut new_list: Vec<Room> = Vec::with_capacity(hashmap_rooms.len());
-                for value in hashmap_rooms.values() {
-                    {
-                        //println!("pre read_clone");
-                        let clean_room = value.read().await.clone();
+        let mut new_list: Vec<Room> = Vec::with_capacity(hashmap_rooms.len());
+        for value in hashmap_rooms.values() {
+            {
+                //println!("pre read_clone");
+                let clean_room = value.read().await.clone();
 
-                        // TODO check if we are in the new room and if not display a way to get to the new one
-                        if clean_room.tombstone.is_none() {
-                            new_list.push(clean_room.clone());
-                            let mut event_list_async_sync_logic = EventListAsynSyncLogic::default();
-                            event_list_async_sync_logic
-                                .update_data(clean_room.clone())
-                                .await;
-                            room_to_events_map.insert(
-                                clean_room.room_id.to_string(),
-                                Mutex::new(event_list_async_sync_logic),
-                            );
-                        }
-                    }
+                // TODO check if we are in the new room and if not display a way to get to the new one
+                if clean_room.tombstone.is_none() {
+                    new_list.push(clean_room.clone());
+                    let mut event_list_async_sync_logic = EventListAsynSyncLogic::default();
+                    event_list_async_sync_logic
+                        .update_data(clean_room.clone())
+                        .await;
+                    room_to_events_map.insert(
+                        clean_room.room_id.to_string(),
+                        Mutex::new(event_list_async_sync_logic),
+                    );
                 }
-
-                if !new_list.eq(&self.data_cache) {
-                    self.data_cache = new_list.clone();
-
-                    crate::EVENT_SINK
-                        .get()
-                        .unwrap()
-                        .clone()
-                        .submit_command(crate::APPEND_ROOMLIST, new_list, Target::Auto)
-                        .expect("command failed to submit");
-                }
-            } else {
-                eprintln!("Failed to aquire client");
             }
+        }
+
+        if !new_list.eq(&self.data_cache) {
+            self.data_cache = new_list.clone();
+
+            crate::EVENT_SINK
+                .get()
+                .unwrap()
+                .clone()
+                .submit_command(crate::APPEND_ROOMLIST, new_list, Target::Auto)
+                .expect("command failed to submit");
         }
     }
 

@@ -16,8 +16,9 @@ command = "cargo"
 args = ["doc", "-p", "druid", "--open"]
 
 [tasks.build-web]
-command = "wasm-pack"
-args = ["build", "--target", "web", "--dev"]
+command = "rustup"
+#command = "wasm-pack"
+args = ["run", "nightly", "wasm-pack", "build", "--target", "web", "--dev"]
 
 [tasks.web-server]
 install_crate = { crate_name = "https", binary = "http", test_arg = "--help" }

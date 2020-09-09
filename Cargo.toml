@@ -44,7 +44,7 @@ console_error_panic_hook = "0.1.6"
 wasm-bindgen-futures = "0.4"
 
 [patch.crates-io]
-olm-sys = { git = "https://gitlab.gnome.org/BrainBlasted/olm-sys.git", branch = "master", features = ["serde"]}
+olm-sys = { path = "../olm-sys", features = ["serde"]} #git = "https://gitlab.gnome.org/BrainBlasted/olm-sys.git", branch = "master"
 
 [profile.release]
 # less code to include into binary

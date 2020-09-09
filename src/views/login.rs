@@ -11,10 +11,10 @@ pub fn login_ui() -> impl Widget<AppState> {
         let homeserver = (*data).homeserver.clone();
         let mxid = (*data).mxid.clone();
         let password = (*data).password.clone();
-        crate::matrix::login::create_client(homeserver);
+        let client = crate::matrix::login::create_client(homeserver);
 
         data.login_running = true;
-        crate::matrix::login::login(ctx.get_external_handle(), mxid, password);
+        crate::matrix::login::login(ctx.get_external_handle(), client, mxid, password);
     });
     let button_placeholder = Flex::column()
         .with_child(Label::new(LocalizedString::new("Login processing...")).padding(5.0))
