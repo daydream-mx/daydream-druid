@@ -7,6 +7,7 @@ use std::convert::TryFrom;
 use std::sync::Arc;
 use tokio::sync::Mutex;
 use url::Url;
+use druid::Target;
 
 pub fn relogin(sink: druid::ExtEventSink) {
     cfg_if::cfg_if! {
@@ -40,7 +41,7 @@ async fn relogin_real(sink: druid::ExtEventSink) {
                 eprintln!("{}", e);
             };
             println!("Finished relogin");
-            sink.submit_command(crate::SET_VIEW, crate::View::MainView, None)
+            sink.submit_command(crate::SET_VIEW, crate::View::MainView, Target::Auto)
                 .expect("command failed to submit");
         }
         start_sync(sink).await;
@@ -95,7 +96,7 @@ async fn login_real(sink: druid::ExtEventSink, mxid: String, password: String) {
             session.save();
         }
         println!("Login done!");
-        sink.submit_command(crate::SET_VIEW, crate::View::MainView, None)
+        sink.submit_command(crate::SET_VIEW, crate::View::MainView, Target::Auto)
             .expect("command failed to submit");
     }
     start_sync(sink).await;

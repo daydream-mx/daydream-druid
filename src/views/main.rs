@@ -1,7 +1,7 @@
 use crate::AppState;
 use druid::{
     widget::{Controller, Flex, Label, List, Scroll, TextBox},
-    Color, Env, Event, EventCtx, UnitPoint, Widget, WidgetExt,
+    Color, Env, Event, EventCtx, UnitPoint, Widget, WidgetExt, Target
 };
 use matrix_sdk::{
     events::{
@@ -110,7 +110,7 @@ pub fn main_ui() -> impl Widget<AppState> {
             .on_click(|ctx, data: &mut Arc<Room>, _env| {
                 let handle = ctx.get_external_handle();
                 handle
-                    .submit_command(crate::SWITCH_ROOM, data.room_id.clone(), None)
+                    .submit_command(crate::SWITCH_ROOM, data.room_id.clone(), Target::Auto)
                     .expect("command failed to submit");
             })
     })
@@ -164,7 +164,7 @@ pub fn main_ui() -> impl Widget<AppState> {
         //.expand_height()
         .background(Color::rgb8(41, 41, 41))
         .border(Color::WHITE, 1.0);
-    event_side.add_child(event_list_full);
+    event_side.add_flex_child(event_list_full, 1.0);
     event_side.add_flex_spacer(1.0);
     event_side.add_child(TextBox::new().lens(AppState::new_message).expand_width());
     event_side.add_spacer(4.0);

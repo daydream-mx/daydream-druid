@@ -1,5 +1,5 @@
 #![feature(iter_order_by)]
-#![type_length_limit="1446569"]
+#![type_length_limit = "1446569"]
 
 use crate::matrix::room::EventListAsynSyncLogic;
 use druid::{

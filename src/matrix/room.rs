@@ -8,6 +8,7 @@ use matrix_sdk::{
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
 use tokio::sync::Mutex;
+use druid::Target;
 
 #[derive(Clone)]
 pub struct RoomListAsynSyncLogic {
@@ -38,7 +39,7 @@ impl RoomListAsynSyncLogic {
                 .get()
                 .unwrap()
                 .clone()
-                .submit_command(crate::APPEND_ROOMLIST, subset_vec, None)
+                .submit_command(crate::APPEND_ROOMLIST, subset_vec, Target::Auto)
                 .expect("command failed to submit");
         }
     }
@@ -56,7 +57,7 @@ impl RoomListAsynSyncLogic {
                 .get()
                 .unwrap()
                 .clone()
-                .submit_command(crate::REMOVE_ROOMLIST_ITEMS, subset_vec, None)
+                .submit_command(crate::REMOVE_ROOMLIST_ITEMS, subset_vec, Target::Auto)
                 .expect("command failed to submit");
         }
     }
@@ -99,7 +100,7 @@ impl RoomListAsynSyncLogic {
                         .get()
                         .unwrap()
                         .clone()
-                        .submit_command(crate::APPEND_ROOMLIST, new_list, None)
+                        .submit_command(crate::APPEND_ROOMLIST, new_list, Target::Auto)
                         .expect("command failed to submit");
                 }
             } else {
@@ -147,7 +148,7 @@ impl EventListAsynSyncLogic {
                 .get()
                 .unwrap()
                 .clone()
-                .submit_command(crate::APPEND_EVENTLIST, subset_vec, None)
+                .submit_command(crate::APPEND_EVENTLIST, subset_vec, Target::Auto)
                 .expect("command failed to submit");
         }
     }
@@ -172,11 +173,11 @@ impl EventListAsynSyncLogic {
             self.data_cache = new_list.clone();
 
             /*crate::EVENT_SINK
-                .get()
-                .unwrap()
-                .clone()
-                .submit_command(crate::APPEND_EVENTLIST, new_list, None)
-                .expect("command failed to submit");*/
+            .get()
+            .unwrap()
+            .clone()
+            .submit_command(crate::APPEND_EVENTLIST, new_list, None)
+            .expect("command failed to submit");*/
         }
     }
 
