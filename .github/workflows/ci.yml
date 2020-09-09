@@ -85,10 +85,10 @@ jobs:
       - name: install wasm-pack
         run: cargo install wasm-pack
 
-      - name: install stable toolchain
+      - name: install nightly toolchain
         uses: actions-rs/toolchain@v1
         with:
-          toolchain: stable
+          toolchain: nightly
           target: wasm32-unknown-unknown
           components: clippy
           profile: minimal
