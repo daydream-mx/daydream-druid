@@ -4,7 +4,7 @@
 use crate::matrix::room::EventListAsynSyncLogic;
 use druid::{
     widget::ViewSwitcher, AppLauncher, Data, Lens, LocalizedString, PlatformError, Selector, Size,
-    Widget, WindowDesc, WidgetId
+    Widget, WindowDesc,
 };
 use matrix_sdk::{events::AnySyncMessageEvent, identifiers::RoomId, Client, Room};
 use once_cell::sync::OnceCell;

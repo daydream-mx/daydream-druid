@@ -124,24 +124,47 @@ pub async fn start_sync(sink: druid::ExtEventSink) {
 
         let client: Client = locked_client.clone();
 
-        tokio::spawn(async move {
-            match client.clone().sync_token().await {
-                Some(token) => {
-                    let sync_settings = SyncSettings::new().token(token);
-                    client
-                        .clone()
-                        .sync_forever(sync_settings, |_| async {})
-                        .await;
-                }
-                None => {
-                    let sync_settings = SyncSettings::new();
-                    client
-                        .clone()
-                        .sync_forever(sync_settings, |_| async {})
-                        .await;
-                }
+        cfg_if::cfg_if! {
+            if #[cfg(any(target_arch = "wasm32"))] {
+                wasm_bindgen_futures::spawn_local(async move {
+                    match client.clone().sync_token().await {
+                        Some(token) => {
+                            let sync_settings = SyncSettings::new().token(token);
+                            client
+                                .clone()
+                                .sync_forever(sync_settings, |_| async {})
+                                .await;
+                        }
+                        None => {
+                            let sync_settings = SyncSettings::new();
+                            client
+                                .clone()
+                                .sync_forever(sync_settings, |_| async {})
+                                .await;
+                        }
+                    }
+                });
+            } else {
+                tokio::spawn(async move {
+                    match client.clone().sync_token().await {
+                        Some(token) => {
+                            let sync_settings = SyncSettings::new().token(token);
+                            client
+                                .clone()
+                                .sync_forever(sync_settings, |_| async {})
+                                .await;
+                        }
+                        None => {
+                            let sync_settings = SyncSettings::new();
+                            client
+                                .clone()
+                                .sync_forever(sync_settings, |_| async {})
+                                .await;
+                        }
+                    }
+                });
             }
-        });
+        }
         println!("After sync");
     }
     // Get the cache once

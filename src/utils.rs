@@ -48,9 +48,19 @@ pub struct EventListAppedStruct {
 }
 
 pub fn switch_room_helper(room_id: RoomId) {
-    tokio::spawn(async move {
-        let room_to_events_map = crate::ROOM_TO_EVENTS_MAP.get().unwrap().lock().await;
-        let event_list_logic = room_to_events_map[&room_id.to_string()].lock().await;
-        event_list_logic.switch_room();
-    });
+    cfg_if::cfg_if! {
+        if #[cfg(any(target_arch = "wasm32"))] {
+            wasm_bindgen_futures::spawn_local(async move {
+                let room_to_events_map = crate::ROOM_TO_EVENTS_MAP.get().unwrap().lock().await;
+                let event_list_logic = room_to_events_map[&room_id.to_string()].lock().await;
+                event_list_logic.switch_room();
+            });
+        } else {
+            tokio::spawn(async move {
+                let room_to_events_map = crate::ROOM_TO_EVENTS_MAP.get().unwrap().lock().await;
+                let event_list_logic = room_to_events_map[&room_id.to_string()].lock().await;
+                event_list_logic.switch_room();
+            });
+        }
+    }
 }

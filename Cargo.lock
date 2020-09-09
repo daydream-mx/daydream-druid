@@ -445,7 +445,7 @@ dependencies = [
  "dirs",
  "druid",
  "futures",
- "futures-locks 0.6.1-pre",
+ "futures-locks",
  "matrix-sdk",
  "matrix-sdk-common-macros",
  "once_cell",
@@ -499,7 +499,7 @@ checksum = "212d0f5754cb6769937f4501cc0e67f4f4483c8d2c3e1e922ee9edbe4ab4c7c0"
 [[package]]
 name = "druid"
 version = "0.6.0"
-source = "git+https://github.com/linebender/druid.git?rev=008118687fa72bd495bf3bbe0d34522f8b5ff6ac#008118687fa72bd495bf3bbe0d34522f8b5ff6ac"
+source = "git+https://github.com/daydream-mx/druid.git?branch=fix-target-auto-not-calling-controllers#b69497ddcc3956c0513e7e6370e8ecc4f0dcf85b"
 dependencies = [
  "console_log",
  "druid-derive",
@@ -520,7 +520,7 @@ dependencies = [
 [[package]]
 name = "druid-derive"
 version = "0.3.1"
-source = "git+https://github.com/linebender/druid.git?rev=008118687fa72bd495bf3bbe0d34522f8b5ff6ac#008118687fa72bd495bf3bbe0d34522f8b5ff6ac"
+source = "git+https://github.com/daydream-mx/druid.git?branch=fix-target-auto-not-calling-controllers#b69497ddcc3956c0513e7e6370e8ecc4f0dcf85b"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -530,7 +530,7 @@ dependencies = [
 [[package]]
 name = "druid-shell"
 version = "0.6.0"
-source = "git+https://github.com/linebender/druid.git?rev=008118687fa72bd495bf3bbe0d34522f8b5ff6ac#008118687fa72bd495bf3bbe0d34522f8b5ff6ac"
+source = "git+https://github.com/daydream-mx/druid.git?branch=fix-target-auto-not-calling-controllers#b69497ddcc3956c0513e7e6370e8ecc4f0dcf85b"
 dependencies = [
  "anyhow",
  "bitflags",
@@ -724,14 +724,6 @@ name = "futures-locks"
 version = "0.6.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "50c4e684ddb2d8a4db5ca8a02b35156da129674ba4412b6f528698d58c594954"
-dependencies = [
- "futures",
-]
-
-[[package]]
-name = "futures-locks"
-version = "0.6.1-pre"
-source = "git+https://github.com/asomers/futures-locks#908226deac658e020436e54d66680ff736e5a2b4"
 dependencies = [
  "futures",
 ]
@@ -1358,7 +1350,7 @@ checksum = "7ffc5c5338469d4d3ea17d269fa8ea3512ad247247c30bd2df69e68309ed0a08"
 [[package]]
 name = "matrix-sdk"
 version = "0.1.0"
-source = "git+https://github.com/matrix-org/matrix-rust-sdk#35f51178004b73e0032f4cd5a30fe6ebdf7d3a0e"
+source = "git+https://github.com/matrix-org/matrix-rust-sdk?rev=35f51178004b73e0032f4cd5a30fe6ebdf7d3a0e#35f51178004b73e0032f4cd5a30fe6ebdf7d3a0e"
 dependencies = [
  "async-trait",
  "dashmap",
@@ -1378,7 +1370,7 @@ dependencies = [
 [[package]]
 name = "matrix-sdk-base"
 version = "0.1.0"
-source = "git+https://github.com/matrix-org/matrix-rust-sdk#35f51178004b73e0032f4cd5a30fe6ebdf7d3a0e"
+source = "git+https://github.com/matrix-org/matrix-rust-sdk?rev=35f51178004b73e0032f4cd5a30fe6ebdf7d3a0e#35f51178004b73e0032f4cd5a30fe6ebdf7d3a0e"
 dependencies = [
  "async-trait",
  "matrix-sdk-common",
@@ -1395,10 +1387,10 @@ dependencies = [
 [[package]]
 name = "matrix-sdk-common"
 version = "0.1.0"
-source = "git+https://github.com/matrix-org/matrix-rust-sdk#35f51178004b73e0032f4cd5a30fe6ebdf7d3a0e"
+source = "git+https://github.com/matrix-org/matrix-rust-sdk?rev=35f51178004b73e0032f4cd5a30fe6ebdf7d3a0e#35f51178004b73e0032f4cd5a30fe6ebdf7d3a0e"
 dependencies = [
  "assign",
- "futures-locks 0.6.0",
+ "futures-locks",
  "instant",
  "js_int",
  "ruma",
@@ -1409,7 +1401,7 @@ dependencies = [
 [[package]]
 name = "matrix-sdk-common-macros"
 version = "0.1.0"
-source = "git+https://github.com/matrix-org/matrix-rust-sdk#35f51178004b73e0032f4cd5a30fe6ebdf7d3a0e"
+source = "git+https://github.com/matrix-org/matrix-rust-sdk?rev=35f51178004b73e0032f4cd5a30fe6ebdf7d3a0e#35f51178004b73e0032f4cd5a30fe6ebdf7d3a0e"
 dependencies = [
  "quote",
  "syn",
@@ -1418,7 +1410,7 @@ dependencies = [
 [[package]]
 name = "matrix-sdk-crypto"
 version = "0.1.0"
-source = "git+https://github.com/matrix-org/matrix-rust-sdk#35f51178004b73e0032f4cd5a30fe6ebdf7d3a0e"
+source = "git+https://github.com/matrix-org/matrix-rust-sdk?rev=35f51178004b73e0032f4cd5a30fe6ebdf7d3a0e#35f51178004b73e0032f4cd5a30fe6ebdf7d3a0e"
 dependencies = [
  "async-trait",
  "atomic",
@@ -1632,6 +1624,7 @@ dependencies = [
 [[package]]
 name = "olm-sys"
 version = "0.2.0"
+source = "git+https://gitlab.gnome.org/BrainBlasted/olm-sys.git?branch=master#8ff4aaec8552ef276664a4fdf27dc353e88d2fea"
 dependencies = [
  "cfg-if",
  "cmake",
@@ -2352,9 +2345,9 @@ checksum = "fbee7696b84bbf3d89a1c2eccff0850e3047ed46bfcd2e92c29a2d074d57e252"
 
 [[package]]
 name = "socket2"
-version = "0.3.12"
+version = "0.3.15"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "03088793f677dce356f3ccc2edb1b314ad191ab702a5de3faf49304f7e104918"
+checksum = "b1fa70dc5c8104ec096f4fe7ede7a221d35ae13dcd19ba1ad9a81d2cab9a1c44"
 dependencies = [
  "cfg-if",
  "libc",
