@@ -1,5 +1,6 @@
 use super::sync::EventCallback;
 use crate::matrix::room::RoomListAsynSyncLogic;
+use druid::Target;
 use matrix_sdk::{Client, ClientConfig, Session as SDKSession, SyncSettings};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -7,7 +8,6 @@ use std::convert::TryFrom;
 use std::sync::Arc;
 use tokio::sync::Mutex;
 use url::Url;
-use druid::Target;
 
 pub fn relogin(sink: druid::ExtEventSink) {
     cfg_if::cfg_if! {

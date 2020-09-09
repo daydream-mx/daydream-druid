@@ -1,14 +1,16 @@
+use crate::EventListAppedStruct;
+use druid::Target;
 use matrix_sdk::{
     events::{
         room::message::MessageEventContent, AnyPossiblyRedactedSyncMessageEvent,
         AnySyncMessageEvent, SyncMessageEvent,
     },
+    identifiers::RoomId,
     Room,
 };
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
 use tokio::sync::Mutex;
-use druid::Target;
 
 #[derive(Clone)]
 pub struct RoomListAsynSyncLogic {
@@ -122,6 +124,8 @@ impl RoomListAsynSyncLogic {
 pub struct EventListAsynSyncLogic {
     data_cache: Vec<AnySyncMessageEvent>,
     fetching_events: Arc<AtomicBool>,
+    switching_room: Arc<AtomicBool>,
+    room_id: Option<RoomId>,
 }
 
 impl Default for EventListAsynSyncLogic {
@@ -129,6 +133,8 @@ impl Default for EventListAsynSyncLogic {
         EventListAsynSyncLogic {
             data_cache: vec![],
             fetching_events: Arc::new(AtomicBool::new(false)),
+            switching_room: Arc::new(AtomicBool::new(false)),
+            room_id: None,
         }
     }
 }
@@ -144,11 +150,19 @@ impl EventListAsynSyncLogic {
             self.data_cache
                 .push(AnySyncMessageEvent::RoomMessage(new_event.clone()));
             let subset_vec = vec![AnySyncMessageEvent::RoomMessage(new_event)];
+            let eventlist_append_struct = EventListAppedStruct {
+                room_id: self.room_id.clone().unwrap(),
+                events: subset_vec,
+            };
             crate::EVENT_SINK
                 .get()
                 .unwrap()
                 .clone()
-                .submit_command(crate::APPEND_EVENTLIST, subset_vec, Target::Auto)
+                .submit_command(
+                    crate::APPEND_EVENTLIST,
+                    eventlist_append_struct,
+                    Target::Auto,
+                )
                 .expect("command failed to submit");
         }
     }
@@ -170,22 +184,26 @@ impl EventListAsynSyncLogic {
             .iter()
             .eq_by(&new_list, |x, y| x.event_id() == y.event_id())
         {
-            self.data_cache = new_list.clone();
-
-            /*crate::EVENT_SINK
-            .get()
-            .unwrap()
-            .clone()
-            .submit_command(crate::APPEND_EVENTLIST, new_list, None)
-            .expect("command failed to submit");*/
+            self.data_cache = new_list;
         }
     }
 
-    // TODO switch room
+    pub fn switch_room(&self) {
+        if !self.switching_room.swap(true, Ordering::Acquire) {
+            crate::EVENT_SINK
+                .get()
+                .unwrap()
+                .clone()
+                .submit_command(crate::SET_EVENTLIST, self.data_cache.clone(), Target::Auto)
+                .expect("command failed to submit");
+            self.switching_room.clone().store(false, Ordering::Release);
+        }
+    }
 
     /// Get the actual data of the roomlist from the matrix Client global
     pub async fn update_data(&mut self, room: Room) {
         if !self.fetching_events.swap(true, Ordering::Acquire) {
+            self.room_id = Some(room.room_id.clone());
             self.get_events_from_room(room).await;
             self.fetching_events.store(false, Ordering::Release);
         }

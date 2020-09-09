@@ -1,7 +1,8 @@
+use crate::utils::switch_room_helper;
 use crate::AppState;
 use druid::{
     widget::{Controller, Flex, Label, List, Scroll, TextBox},
-    Color, Env, Event, EventCtx, UnitPoint, Widget, WidgetExt, Target
+    Color, Env, Event, EventCtx, Target, UnitPoint, Widget, WidgetExt,
 };
 use matrix_sdk::{
     events::{
@@ -71,12 +72,8 @@ impl<W: Widget<AppState>> Controller<AppState, W> for EventListController {
                 ctx.request_update();
             }
 
-            if let Some(events_list) = cmd.get(crate::APPEND_EVENTLIST) {
-                let mut new_events_list =
-                    Vec::with_capacity(data.events_list.len() + events_list.len());
-                for event in data.events_list.iter() {
-                    new_events_list.push(event.clone());
-                }
+            if let Some(events_list) = cmd.get(crate::SET_EVENTLIST) {
+                let mut new_events_list = Vec::with_capacity(events_list.len());
                 for event in events_list {
                     new_events_list.push(Arc::new(event.clone()));
                 }
@@ -84,9 +81,26 @@ impl<W: Widget<AppState>> Controller<AppState, W> for EventListController {
                 ctx.request_update();
             }
 
+            if let Some(eventlist_append_struct) = cmd.get(crate::APPEND_EVENTLIST) {
+                if eventlist_append_struct.room_id == data.current_room {
+                    let events_list = &eventlist_append_struct.events;
+                    let mut new_events_list =
+                        Vec::with_capacity(data.events_list.len() + events_list.len());
+                    for event in data.events_list.iter() {
+                        new_events_list.push(event.clone());
+                    }
+                    for event in events_list {
+                        new_events_list.push(Arc::new(event.clone()));
+                    }
+                    data.events_list = Arc::new(new_events_list);
+                    ctx.request_update();
+                }
+            }
+
             if let Some(room_id) = cmd.get(crate::SWITCH_ROOM) {
                 data.current_room = room_id.to_string();
                 println!("Set current room to {:?}", room_id);
+                switch_room_helper(room_id.clone());
                 ctx.request_update();
             }
         }

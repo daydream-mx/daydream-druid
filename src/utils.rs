@@ -4,6 +4,8 @@ use druid::{
     AppDelegate, Color, Command, Data, DelegateCtx, Env, Target, Widget, WidgetExt,
 };
 
+use matrix_sdk::{events::AnySyncMessageEvent, identifiers::RoomId};
+
 pub struct Delegate;
 
 impl AppDelegate<AppState> for Delegate {
@@ -38,4 +40,17 @@ pub fn label_widget<T: Data>(widget: impl Widget<T> + 'static, label: &str) -> i
         .with_flex_child(widget.expand_width(), 1.0)
         .with_spacer(8.0)
         .border(Color::WHITE, 1.0)
+}
+
+pub struct EventListAppedStruct {
+    pub room_id: RoomId,
+    pub events: Vec<AnySyncMessageEvent>,
+}
+
+pub fn switch_room_helper(room_id: RoomId) {
+    tokio::spawn(async move {
+        let room_to_events_map = crate::ROOM_TO_EVENTS_MAP.get().unwrap().lock().await;
+        let event_list_logic = room_to_events_map[&room_id.to_string()].lock().await;
+        event_list_logic.switch_room();
+    });
 }

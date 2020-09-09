@@ -4,13 +4,14 @@
 use crate::matrix::room::EventListAsynSyncLogic;
 use druid::{
     widget::ViewSwitcher, AppLauncher, Data, Lens, LocalizedString, PlatformError, Selector, Size,
-    Widget, WindowDesc,
+    Widget, WindowDesc, WidgetId
 };
 use matrix_sdk::{events::AnySyncMessageEvent, identifiers::RoomId, Client, Room};
 use once_cell::sync::OnceCell;
 use std::collections::HashMap;
 use std::sync::Arc;
 use tokio::sync::Mutex;
+use utils::EventListAppedStruct;
 use views::login::login_ui;
 use views::main::main_ui;
 
@@ -41,7 +42,9 @@ pub const FORCE_RERENDER: Selector<()> = Selector::new("event-daydream.force-rer
 
 pub const SWITCH_ROOM: Selector<RoomId> = Selector::new("event-daydream.switch-room");
 
-pub const APPEND_EVENTLIST: Selector<Vec<AnySyncMessageEvent>> =
+pub const SET_EVENTLIST: Selector<Vec<AnySyncMessageEvent>> =
+    Selector::new("event-daydream.set-eventlist");
+pub const APPEND_EVENTLIST: Selector<EventListAppedStruct> =
     Selector::new("event-daydream.append-eventlist");
 
 static CLIENT: OnceCell<Mutex<Client>> = OnceCell::new();
