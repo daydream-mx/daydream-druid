@@ -15,7 +15,7 @@ name = "daydream-desktop"
 path = "src/bin/desktop.rs"
 
 [dependencies]
-druid = { git = "https://github.com/daydream-mx/druid.git", branch = "fix-target-auto-not-calling-controllers", features = ["image"] } #rev = "22ae5c7c5022eb9bc7a00af60f61e68bdbaa9578",
+druid = { git = "https://github.com/linebender/druid", rev = "7a3251b9b89df11af653189f2be04c7304861acf", features = ["image"] }
 matrix-sdk = { version = "0.1.0", git = "https://github.com/matrix-org/matrix-rust-sdk", rev = "35f51178004b73e0032f4cd5a30fe6ebdf7d3a0e", default-features = false, features = ["messages", "rustls-tls", "encryption"]} # features = ["encryption"]}
 matrix-sdk-common-macros = { version = "0.1.0", git = "https://github.com/matrix-org/matrix-rust-sdk", rev = "35f51178004b73e0032f4cd5a30fe6ebdf7d3a0e"}
 async-trait = "0.1"
@@ -27,6 +27,7 @@ cfg-if = "0.1"
 serde = "1"
 serde_json = "1"
 futures = "0.3"
+crochet = { git = "https://github.com/raphlinus/crochet", rev = "f411946d6bf9ec6ccfb93a552b03890a026d4ec7" }
 
 # Markdown
 pulldown-cmark = "0.8.0"

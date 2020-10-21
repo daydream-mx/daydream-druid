@@ -2,12 +2,13 @@
 #![type_length_limit = "1446569"]
 
 use crate::matrix::room::EventListAsynSyncLogic;
+use crochet::{AppHolder, Cx, DruidAppData, List, ListData};
 use druid::{
-    widget::ViewSwitcher, AppLauncher, Data, Lens, LocalizedString, PlatformError, Selector, Size,
-    Widget, WindowDesc,
+    AppLauncher, Data, LocalizedString, PlatformError, Selector, Size, Widget, WindowDesc,
 };
 use matrix_sdk::{events::AnySyncMessageEvent, identifiers::RoomId, locks::Mutex, Room};
 use once_cell::sync::OnceCell;
+use std::borrow::Cow;
 use std::collections::HashMap;
 use std::sync::Arc;
 use utils::EventListAppedStruct;
@@ -31,7 +32,7 @@ pub fn wasm_main() {
 //// START OF ACTUAL APP ////
 /////////////////////////////
 
-const WINDOW_TITLE: LocalizedString<AppState> = LocalizedString::new("Daydream");
+const WINDOW_TITLE: LocalizedString<DruidAppData> = LocalizedString::new("Daydream");
 
 const SET_VIEW: Selector<View> = Selector::new("event-daydream.set-view");
 pub const APPEND_ROOMLIST: Selector<Vec<Room>> = Selector::new("event-daydream.append-roomlist");
@@ -62,29 +63,42 @@ enum View {
 impl Default for View {
     fn default() -> Self {
         match matrix::login::Session::load() {
-            Some(_session) => {
-                // TODO relogin
-                View::MainView
-            }
+            Some(_session) => View::MainView,
             None => View::LoginView,
         }
     }
 }
 
-#[derive(Clone, Data, Lens, Default)]
-pub struct AppState {
-    homeserver: String,
-    mxid: String,
-    password: String,
-    access_token: Option<String>,
+#[derive(Default)]
+pub struct AppState<'a> {
+    homeserver: Arc<Cow<'a, str>>,
+    mxid: Arc<Cow<'a, str>>,
+    password: Arc<Cow<'a, str>>,
+    access_token: Option<Cow<'a, str>>,
     login_running: bool,
     current_view: View,
 
-    rooms_list: Arc<Vec<Arc<Room>>>,
-    events_list: Arc<Vec<Arc<AnySyncMessageEvent>>>,
+    rooms_list_data: ListData<Arc<Room>>,
+    events_list_data: ListData<Arc<AnySyncMessageEvent>>,
+    rooms_list: List,
+    events_list: List,
 
-    new_message: String,
-    current_room: String,
+    new_message: Cow<'a, str>,
+    current_room: Cow<'a, str>,
+}
+
+impl AppState<'_> {
+    fn run(&mut self, cx: &mut Cx) {
+        // The syntax matters here.
+        match self.current_view {
+            View::LoginView => {
+                login_ui(cx, self);
+            }
+            View::MainView => {
+                main_ui(cx, self);
+            }
+        }
+    }
 }
 
 pub fn rmain() -> Result<(), PlatformError> {
@@ -92,25 +106,18 @@ pub fn rmain() -> Result<(), PlatformError> {
         .window_size(Size::new(800.0, 600.0))
         .title(WINDOW_TITLE);
 
-    // create the initial app state
-    let initial_state = AppState::default();
-    let delegate = utils::Delegate {};
-
-    let launcher = AppLauncher::with_window(main_window).delegate(delegate);
+    let launcher = AppLauncher::with_window(main_window);
 
     let event_sink = launcher.get_external_handle();
     if EVENT_SINK.set(event_sink).is_err() {
         panic!();
     }
-    launcher.launch(initial_state)
+    let data = Default::default();
+    launcher.launch(data)
 }
 
-fn ui_builder() -> impl Widget<AppState> {
-    ViewSwitcher::new(
-        |data: &AppState, _env| data.current_view,
-        |selector, _data, _env| match selector {
-            View::LoginView => Box::new(login_ui()),
-            View::MainView => Box::new(main_ui()),
-        },
-    )
+fn ui_builder() -> impl Widget<DruidAppData> {
+    let mut app_logic = AppState::default();
+
+    AppHolder::new(move |cx| app_logic.run(cx))
 }

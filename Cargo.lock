@@ -46,6 +46,12 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "4af5687fe33aec5e70ef14caac5e0d363e335e5e5d6385fb75978d0c241b1d67"
 
 [[package]]
+name = "associative-cache"
+version = "1.0.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "46016233fc1bb55c23b856fe556b7db6ccd05119a0a392e04f0b3b7c79058f16"
+
+[[package]]
 name = "async-trait"
 version = "0.1.40"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -378,6 +384,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "crochet"
+version = "0.1.0"
+source = "git+https://github.com/raphlinus/crochet?rev=f411946d6bf9ec6ccfb93a552b03890a026d4ec7#f411946d6bf9ec6ccfb93a552b03890a026d4ec7"
+dependencies = [
+ "druid",
+ "futures",
+ "log",
+]
+
+[[package]]
 name = "crossbeam-channel"
 version = "0.4.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -442,6 +458,7 @@ dependencies = [
  "async-trait",
  "cfg-if",
  "console_error_panic_hook",
+ "crochet",
  "dirs",
  "druid",
  "futures",
@@ -499,7 +516,7 @@ checksum = "212d0f5754cb6769937f4501cc0e67f4f4483c8d2c3e1e922ee9edbe4ab4c7c0"
 [[package]]
 name = "druid"
 version = "0.6.0"
-source = "git+https://github.com/daydream-mx/druid.git?branch=fix-target-auto-not-calling-controllers#b69497ddcc3956c0513e7e6370e8ecc4f0dcf85b"
+source = "git+https://github.com/linebender/druid?rev=7a3251b9b89df11af653189f2be04c7304861acf#7a3251b9b89df11af653189f2be04c7304861acf"
 dependencies = [
  "console_log",
  "druid-derive",
@@ -520,7 +537,7 @@ dependencies = [
 [[package]]
 name = "druid-derive"
 version = "0.3.1"
-source = "git+https://github.com/daydream-mx/druid.git?branch=fix-target-auto-not-calling-controllers#b69497ddcc3956c0513e7e6370e8ecc4f0dcf85b"
+source = "git+https://github.com/linebender/druid?rev=7a3251b9b89df11af653189f2be04c7304861acf#7a3251b9b89df11af653189f2be04c7304861acf"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -530,7 +547,7 @@ dependencies = [
 [[package]]
 name = "druid-shell"
 version = "0.6.0"
-source = "git+https://github.com/daydream-mx/druid.git?branch=fix-target-auto-not-calling-controllers#b69497ddcc3956c0513e7e6370e8ecc4f0dcf85b"
+source = "git+https://github.com/linebender/druid?rev=7a3251b9b89df11af653189f2be04c7304861acf#7a3251b9b89df11af653189f2be04c7304861acf"
 dependencies = [
  "anyhow",
  "bitflags",
@@ -870,9 +887,9 @@ dependencies = [
 
 [[package]]
 name = "getrandom"
-version = "0.1.14"
+version = "0.1.15"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7abc8dd8451921606d809ba32e95b6111925cd2906060d2dcc29c070220503eb"
+checksum = "fc587bc0ec293155d5bfa6b9891ec18a1e330c234f896ea47fbada4cadbe47e6"
 dependencies = [
  "cfg-if",
  "libc",
@@ -925,9 +942,9 @@ dependencies = [
 
 [[package]]
 name = "glib"
-version = "0.10.1"
+version = "0.10.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a5e0533f48640d86e8e2f3cee778a9f97588d4a0bec8be065ee51ea52346d6c1"
+checksum = "5f11a45bde4cf9567653a14ff96cdbb01e6d2a89651746dbc118319dfdac433e"
 dependencies = [
  "bitflags",
  "futures-channel",
@@ -1313,9 +1330,9 @@ checksum = "e2abad23fbc42b3700f2f279844dc832adb2b2eb069b2df918f455c4e18cc646"
 
 [[package]]
 name = "libc"
-version = "0.2.76"
+version = "0.2.77"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "755456fae044e6fa1ebbbd1b3e902ae19e73097ed4ed87bb79934a867c007bc3"
+checksum = "f2f96b10ec2560088a8e76961b00d47107b3a625fecb76dedb29ee7ccbf98235"
 
 [[package]]
 name = "log"
@@ -1624,7 +1641,7 @@ dependencies = [
 [[package]]
 name = "olm-sys"
 version = "0.2.0"
-source = "git+https://gitlab.gnome.org/BrainBlasted/olm-sys.git#28e4a0e20f5fc257dbc93be14f21717d35840205"
+source = "git+https://gitlab.gnome.org/BrainBlasted/olm-sys.git?branch=master#28e4a0e20f5fc257dbc93be14f21717d35840205"
 dependencies = [
  "cmake",
 ]
@@ -1670,18 +1687,18 @@ checksum = "d4fd5641d01c8f18a23da7b6fe29298ff4b55afcccdf78973b24cf3175fee32e"
 
 [[package]]
 name = "piet"
-version = "0.2.0-pre3"
+version = "0.2.0-pre5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ea034654cccde975d400a32ba8ddf0addebb4832a57180fa31e25ab593d38356"
+checksum = "41dc88caa7ccaa1c1d53027f9664541c2e25bc215f711bbf3a37c7b76e08107e"
 dependencies = [
  "kurbo",
 ]
 
 [[package]]
 name = "piet-cairo"
-version = "0.2.0-pre3"
+version = "0.2.0-pre5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "47b3fd836f83703eb29f0908905ae01f381098baff0bcf732a29a279c6c098be"
+checksum = "9ba3568ecdc1e9fee37f81382ff4732212d37da877e6f3ffa85137098538356f"
 dependencies = [
  "cairo-rs",
  "piet",
@@ -1691,9 +1708,9 @@ dependencies = [
 
 [[package]]
 name = "piet-common"
-version = "0.2.0-pre3"
+version = "0.2.0-pre5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "36a565e3bcd6cc28148aee8f5e77efb539f09df04331ec216dc51bb21e9492dc"
+checksum = "2ca8a570ed73009daa4118d5296106a89f4bb7133f989208200714f735ab6fd4"
 dependencies = [
  "cairo-rs",
  "cairo-sys-rs",
@@ -1710,9 +1727,9 @@ dependencies = [
 
 [[package]]
 name = "piet-coregraphics"
-version = "0.2.0-pre3"
+version = "0.2.0-pre5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9c3633b507ed42dba2f41a50fc3d7fecc54be79bc06b4cf27fea17cc7d234e09"
+checksum = "235ce5a811a2b80aaa3cce285fc37f33e7ceb0f5386043565be5458341a6132a"
 dependencies = [
  "core-foundation",
  "core-foundation-sys",
@@ -1725,10 +1742,11 @@ dependencies = [
 
 [[package]]
 name = "piet-direct2d"
-version = "0.2.0-pre3"
+version = "0.2.0-pre5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f341c6529c3c09182c160f300525ce5380d72f48672157719d6ef44029811df1"
+checksum = "91cbf9d7a33cd261bdac060149f456f0fb10ed0502b800ffbfa84e4b83fbfcc8"
 dependencies = [
+ "associative-cache",
  "dwrote",
  "piet",
  "utf16_lit",
@@ -1738,9 +1756,9 @@ dependencies = [
 
 [[package]]
 name = "piet-web"
-version = "0.2.0-pre3"
+version = "0.2.0-pre5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "050a649c9a046268573d6b4998da05e5114eccaf26bfade737a3e161eab60066"
+checksum = "4c5154285aedf517ad733560cf9f5f73ae1f67655ab7d41d00b32888e351693f"
 dependencies = [
  "js-sys",
  "piet",

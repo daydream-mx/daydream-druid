@@ -1,41 +1,32 @@
 use crate::utils::label_widget;
 use crate::AppState;
-use druid::{
-    widget::{Align, Button, Either, Flex, Label, Scroll, Spinner, TextBox},
-    LocalizedString, Widget, WidgetExt,
-};
+use crochet::{Button, Column, Cx, Label, Row};
 
-pub fn login_ui() -> impl Widget<AppState> {
-    let button = Button::new("Login").on_click(|ctx, data: &mut AppState, _env| {
-        println!("Login button clicked!");
-        let homeserver = (*data).homeserver.clone();
-        let mxid = (*data).mxid.clone();
-        let password = (*data).password.clone();
-        let client = crate::matrix::login::create_client(homeserver);
+pub fn login_ui(cx: &mut Cx, state: &mut AppState) {
+    Row::new().build(cx, |cx| {
+        /*Scroll::new(Align::centered())
+        .vertical()*/
+        // TODO add scroll and align
 
-        data.login_running = true;
-        crate::matrix::login::login(ctx.get_external_handle(), client, mxid, password);
+        Column::new().build(cx, |cx| {
+            label_widget(cx, state.homeserver.clone(), "Homeserver");
+            label_widget(cx, state.mxid.clone(), "Username");
+            label_widget(cx, state.password.clone(), "Password");
+            if state.login_running {
+                Column::new().build(cx, |cx| {
+                    Label::new(String::from("Login processing...")).build(cx);
+                    // TODO add spinner
+                });
+            } else if Button::new("Login").build(cx) {
+                println!("Login button clicked!");
+                let homeserver = state.homeserver.to_string();
+                let mxid = state.mxid.to_string();
+                let password = state.password.to_string();
+                let client = crate::matrix::login::create_client(homeserver);
+
+                state.login_running = true;
+                //crate::matrix::login::login(ctx.get_external_handle(), client, mxid, password);
+            }
+        });
     });
-    let button_placeholder = Flex::column()
-        .with_child(Label::new(LocalizedString::new("Login processing...")).padding(5.0))
-        .with_child(Spinner::new());
-    let either = Either::new(|data, _env| data.login_running, button_placeholder, button);
-
-    Scroll::new(Align::centered(
-        Flex::column()
-            .with_child(label_widget(
-                TextBox::new().lens(AppState::homeserver),
-                "Homeserver",
-            ))
-            .with_child(label_widget(
-                TextBox::new().lens(AppState::mxid),
-                "Username",
-            ))
-            .with_child(label_widget(
-                TextBox::new().lens(AppState::password),
-                "Password",
-            ))
-            .with_child(either),
-    ))
-    .vertical()
 }

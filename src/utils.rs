@@ -1,12 +1,9 @@
-use crate::AppState;
-use druid::{
-    widget::{Flex, Label},
-    AppDelegate, Color, Command, Data, DelegateCtx, Env, Target, Widget, WidgetExt,
-};
-
+use crochet::{Cx, Label, Row, TextBox};
 use matrix_sdk::{events::AnySyncMessageEvent, identifiers::RoomId};
+use std::borrow::Cow;
+use std::sync::Arc;
 
-pub struct Delegate;
+/*pub struct Delegate;
 
 impl AppDelegate<AppState> for Delegate {
     fn command(
@@ -30,16 +27,15 @@ impl AppDelegate<AppState> for Delegate {
         }
         true
     }
-}
+}*/
 
-pub fn label_widget<T: Data>(widget: impl Widget<T> + 'static, label: &str) -> impl Widget<T> {
-    Flex::row()
-        .must_fill_main_axis(true)
-        .with_child(Label::new(label).fix_height(40.0))
-        .with_spacer(8.0)
-        .with_flex_child(widget.expand_width(), 1.0)
-        .with_spacer(8.0)
-        .border(Color::WHITE, 1.0)
+pub fn label_widget(cx: &mut Cx, mut content: Arc<Cow<str>>, label: &str) {
+    Row::new().build(cx, |cx| {
+        Label::new(label).build(cx);
+        if let Some(text) = TextBox::new(content.to_string()).build(cx) {
+            content = Arc::from(Cow::from(text));
+        }
+    });
 }
 
 pub struct EventListAppedStruct {
